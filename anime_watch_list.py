@@ -3,8 +3,8 @@ import os
 import subprocess
 import webbrowser
 import tkinter as tk
-from config_generator import ConfigGenerator
 from functools import partial
+from config_generator import ConfigGenerator
 
 
 class AnimeWatchListGUI:
@@ -43,14 +43,17 @@ class AnimeWatchListGUI:
             tk.Label(body_frame, text=self.trim_text(c['title'], title_width), **component_config, width=title_width).grid(**grid_config, column=0)
             tk.Label(body_frame, text=f'#{c["ep"]}', **component_config, width=5).grid(**grid_config, column=1)
             button = tk.Button(body_frame, text="Watch next ep", **component_config, highlightthickness=1, activebackground=bg_color,\
-                state='normal' if c['next_ep_url'] else 'disabled', compound=tk.CENTER, command=partial(self.on_open_page, c['next_ep_url']))
+                state='normal' if c['next_ep_url'] else 'disabled', compound=tk.CENTER, command=partial(self.on_open_page, i, c['next_ep_url']))
             button.grid(**grid_config, column=2)
 
     def on_close(self):
         self.root.destroy()
 
-    def on_open_page(self, url):
+    def on_open_page(self, index, url):
+        self.config[index]['url'] = self.config[index]['next_ep_url']
+        self.generator.update_config(self.config)
         webbrowser.open(url, new=0, autoraise=True)
+        self.on_close()
 
     def on_edit_config(self):
         file_path = self.generator.get_config_filename()
@@ -66,7 +69,7 @@ class AnimeWatchListGUI:
 
     def trim_text(self, text, max_length):
         if len(text) > max_length:
-            return f'{text[:max_length-3]}...'
+            return f'{text[:max_length-3].rstrip()}...'
         return text
 
 if __name__ == '__main__':

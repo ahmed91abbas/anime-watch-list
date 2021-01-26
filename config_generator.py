@@ -12,6 +12,11 @@ class ConfigGenerator:
     def get_config_filename(self):
         return self.config_filename
 
+    def update_config(self, config):
+        with open(self.config_filename, 'w') as f:
+            for entry in config:
+                f.write(f'{entry["url"]}\n')
+
     def get_urls(self):
         with open(self.config_filename, 'r') as f:
             return [line.rstrip() for line in f.readlines()]
