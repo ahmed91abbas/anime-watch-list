@@ -5,11 +5,15 @@ from bs4 import BeautifulSoup
 
 
 class ConfigGenerator:
-    def __init__(self):
+    def __init__(self, config_filename='config.txt'):
+        self.config_filename = config_filename
         self.config = []
 
+    def get_config_filename(self):
+        return self.config_filename
+
     def get_urls(self):
-        with open('config.txt', 'r') as f:
+        with open(self.config_filename, 'r') as f:
             return [line.rstrip() for line in f.readlines()]
 
     def get_details(self, url):
