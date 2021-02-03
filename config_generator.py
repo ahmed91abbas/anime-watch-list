@@ -23,8 +23,13 @@ class ConfigGenerator:
 
     def get_details(self, url):
         parts = url.split('/')[-1].split('-')
-        ep = parts[-1]
-        title, next_ep_url = self.get_page_title_and_next_ep_url(url)
+        if '/category/' in url:
+            next_ep_url = f'{url.replace("category/", "")}-episode-1'
+            title, _ = self.get_page_title_and_next_ep_url(next_ep_url)
+            ep = 0
+        else:
+            title, next_ep_url = self.get_page_title_and_next_ep_url(url)
+            ep = parts[-1]
         self.config.append({
             'title': title,
             'url': url,
