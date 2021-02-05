@@ -32,22 +32,45 @@ class AnimeWatchListGUI:
         body_frame = tk.Frame(self.root, bg=bg_color)
         body_frame.pack(pady=15)
 
-        width = 50
+        if not config:
+            body_frame.config(width=500, height=300)
+            return
+
+        self.canvas = tk.Canvas(body_frame, bg=bg_color)
+        scrollbar = tk.Scrollbar(body_frame, orient="vertical", command=self.canvas.yview)
+        scrollable_frame = tk.Frame(self.canvas, bg=bg_color)
+        self.canvas.grid_propagate(False)
+        scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
+        self.canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        self.canvas.configure(yscrollcommand=scrollbar.set)
+        self.canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        self.root.bind_all("<MouseWheel>", self.on_mousewheel)
+
         padx = 15
         pady = 5
         title_width = 50
-
         for i, c in enumerate(config):
             grid_config = {'padx': 10, 'pady': 5, 'row': i}
             component_config = {'bg': bg_color, 'font': ('calibri', 16)}
-            tk.Label(body_frame, text=self.trim_text(c['title'], title_width), **component_config, width=title_width).grid(**grid_config, column=0)
-            tk.Label(body_frame, text=f'#{c["ep"]}', **component_config, width=5).grid(**grid_config, column=1)
-            button = tk.Button(body_frame, text="Watch next ep", **component_config, highlightthickness=1, activebackground=bg_color,\
+            title_label = tk.Label(scrollable_frame, text=self.trim_text(c['title'], title_width), **component_config, width=title_width)
+            title_label.grid(**grid_config, column=0)
+            ep_label = tk.Label(scrollable_frame, text=f'#{c["ep"]}', **component_config, width=5)
+            ep_label.grid(**grid_config, column=1)
+            button = tk.Button(scrollable_frame, text="Watch next ep", **component_config, highlightthickness=1, activebackground=bg_color,\
                 state='normal' if c['next_ep_url'] else 'disabled', compound=tk.CENTER, command=partial(self.on_open_page, i, c['next_ep_url']))
             button.grid(**grid_config, column=2)
 
+        self.canvas.update_idletasks()
+        frame_width = title_label.winfo_width() + ep_label.winfo_width() + button.winfo_width() + grid_config['padx'] * 6
+        frame_height = (button.winfo_height() + grid_config['pady'] * 2) * 10
+        self.canvas.config(width=frame_width, height=frame_height)
+
     def on_close(self):
         self.root.destroy()
+
+    def on_mousewheel(self, event):
+        self.canvas.yview_scroll(-1*(event.delta//120), "units")
 
     def on_open_page(self, index, url):
         self.config[index]['url'] = self.config[index]['next_ep_url']
