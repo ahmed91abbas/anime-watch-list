@@ -33,6 +33,8 @@ class AnimeWatchListGUI:
         body_frame.pack(pady=15)
 
         if not config:
+            body_frame.grid_propagate(False)
+            tk.Label(body_frame, text="No content found in config.txt", bg=bg_color, font=('calibri', 22)).grid()
             body_frame.config(width=500, height=300)
             return
 
