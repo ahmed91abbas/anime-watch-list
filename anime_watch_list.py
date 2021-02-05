@@ -14,7 +14,7 @@ class AnimeWatchListGUI:
         self.createGUI(self.config)
         self.mainloop()
 
-    def createGUI(self, config):
+    def createGUI(self, config, max_row_count=10):
         bg_color = '#e6e6ff'
 
         self.root = tk.Tk()
@@ -44,8 +44,10 @@ class AnimeWatchListGUI:
         self.canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        self.root.bind_all("<MouseWheel>", self.on_mousewheel)
+
+        if len(config) > max_row_count:
+            scrollbar.pack(side="right", fill="y")
+            self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
 
         padx = 15
         pady = 5
@@ -63,7 +65,7 @@ class AnimeWatchListGUI:
 
         self.canvas.update_idletasks()
         frame_width = title_label.winfo_width() + ep_label.winfo_width() + button.winfo_width() + grid_config['padx'] * 6
-        frame_height = (button.winfo_height() + grid_config['pady'] * 2) * 10
+        frame_height = (button.winfo_height() + grid_config['pady'] * 2) * max_row_count
         self.canvas.config(width=frame_width, height=frame_height)
 
     def on_close(self):
