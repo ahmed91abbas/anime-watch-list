@@ -14,7 +14,7 @@ class AnimeWatchListGUI:
         self.createGUI(self.config)
         self.mainloop()
 
-    def createGUI(self, config, max_row_count=10):
+    def createGUI(self, config, max_row_count=8):
         bg_color = '#e6e6ff'
         secondary_color = '#b28fc7'
         button_color = '#f7e4d0'
@@ -66,12 +66,12 @@ class AnimeWatchListGUI:
             button = tk.Button(scrollable_frame, text="Watch next ep", bg=button_color, font=component_config['font'], highlightthickness=2,\
                 activebackground=bg_color, compound=tk.CENTER, command=partial(self.on_open_page, i, c['next_ep_url']))
             if not c['next_ep_url']:
-                button.config(state='disabled', highlightthickness=0)
+                button.config(state='disabled')
             button.grid(**grid_config, padx=padx, column=2)
 
         self.canvas.update_idletasks()
         frame_width = title_label.winfo_width() + ep_label.winfo_width() + button.winfo_width() + padx * 2
-        frame_height = (button.winfo_height() + pady * 2) * max_row_count
+        frame_height = (button.winfo_height() + pady * 4) * max_row_count
         self.canvas.config(width=frame_width, height=frame_height)
 
     def on_close(self):
