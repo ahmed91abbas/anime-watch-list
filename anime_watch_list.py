@@ -10,9 +10,14 @@ from config_generator import ConfigGenerator
 class AnimeWatchListGUI:
     def __init__(self):
         self.generator = ConfigGenerator()
-        self.config = self.generator.get_config()
+        self.config = self.sort_config(self.generator.get_config())
         self.createGUI(self.config)
         self.mainloop()
+
+    def sort_config(self, config):
+        l1 = sorted(list(filter(lambda x: x['next_ep_url'], config)), key=lambda x: x['ep'], reverse=True)
+        l2 = sorted(list(filter(lambda x: not x['next_ep_url'], config)), key=lambda x: x['title'])
+        return l1 + l2
 
     def createGUI(self, config, max_row_count=8):
         bg_color = '#e6e6ff'

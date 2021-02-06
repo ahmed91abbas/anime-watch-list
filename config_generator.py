@@ -57,4 +57,4 @@ class ConfigGenerator:
             threads.append(t)
         for thread in threads:
             thread.join()
-        return sorted(sorted(self.config, key=lambda i: i['title']), key=lambda i: i['next_ep_url'], reverse=True)
+        return self.config
