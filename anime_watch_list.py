@@ -75,9 +75,9 @@ class AnimeWatchListGUI:
             button.grid(**grid_config, padx=padx, column=2)
 
         self.canvas.update_idletasks()
-        frame_width = title_label.winfo_width() + ep_label.winfo_width() + button.winfo_width() + padx * 2
-        frame_height = (button.winfo_height() + pady * 4) * max_row_count
-        self.canvas.config(width=frame_width, height=frame_height)
+        row_height = button.winfo_height() + pady * 4
+        row_width = title_label.winfo_width() + ep_label.winfo_width() + button.winfo_width() + padx * 2
+        self.canvas.config(width=row_width, height=row_height * max_row_count, yscrollincrement=row_height)
 
     def on_close(self):
         self.root.destroy()
