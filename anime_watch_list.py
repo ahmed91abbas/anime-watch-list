@@ -15,8 +15,8 @@ class AnimeWatchListGUI:
         self.mainloop()
 
     def sort_config(self, config):
-        l1 = sorted(list(filter(lambda x: x['next_ep_url'], config)), key=lambda x: x['ep'], reverse=True)
-        l2 = sorted(list(filter(lambda x: not x['next_ep_url'], config)), key=lambda x: x['title'])
+        l1 = sorted(filter(lambda x: x['next_ep_url'], config), key=lambda x: x['ep'], reverse=True)
+        l2 = sorted(filter(lambda x: not x['next_ep_url'], config), key=lambda x: x['title'])
         return l1 + l2
 
     def createGUI(self, config, max_row_count=8):
@@ -75,7 +75,7 @@ class AnimeWatchListGUI:
             button.grid(**grid_config, padx=padx, column=2)
 
         self.canvas.update_idletasks()
-        row_height = button.winfo_height() + pady * 4
+        row_height = max(title_label.winfo_height(), ep_label.winfo_height(), button.winfo_height()) + pady * 2
         row_width = title_label.winfo_width() + ep_label.winfo_width() + button.winfo_width() + padx * 2
         self.canvas.config(width=row_width, height=row_height * max_row_count, yscrollincrement=row_height)
 
