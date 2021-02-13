@@ -85,7 +85,7 @@ class AnimeWatchListGUI:
         self.canvas.update_idletasks()
         row_height = max(title_button.winfo_height(), ep_button.winfo_height(), button.winfo_height()) + pady * 2
         row_width = title_button.winfo_width() + ep_button.winfo_width() + button.winfo_width() + padx * 2
-        self.canvas.config(width=row_width, height=row_height * max_row_count, yscrollincrement=row_height)
+        self.canvas.config(width=row_width, height=row_height * min(max_row_count, len(config)), yscrollincrement=row_height)
 
     def on_reload(self):
         self.on_close()
