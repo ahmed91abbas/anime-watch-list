@@ -40,6 +40,7 @@ class AnimeWatchListGUI:
         menu.add_cascade(label="Options", menu=options_menu)
         options_menu.add_command(label="Reload", command=self.on_reload)
         options_menu.add_command(label="Edit the config file", command=self.on_edit_config)
+        options_menu.add_command(label="Open in Github", command=partial(self.on_open_page, 0, 'https://github.com/ahmed91abbas/anime-watch-list'))
 
         body_frame = tk.Frame(self.root, bg=secondary_color)
         body_frame.pack()
