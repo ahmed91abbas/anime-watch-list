@@ -50,6 +50,7 @@ class ConfigGenerator:
         return title, next_ep_url
 
     def get_config(self):
+        self.config = []
         threads = []
         for url in self.get_urls():
             t = threading.Thread(target=self.get_details, args=(url, ))

@@ -10,8 +10,11 @@ from config_generator import ConfigGenerator
 class AnimeWatchListGUI:
     def __init__(self):
         self.generator = ConfigGenerator()
+        self.run()
+
+    def run(self):
         self.config = self.sort_config(self.generator.get_config())
-        self.createGUI(self.config)
+        self.create_gui(self.config)
         self.mainloop()
 
     def sort_config(self, config):
@@ -19,7 +22,7 @@ class AnimeWatchListGUI:
         l2 = sorted(filter(lambda x: not x['next_ep_url'], config), key=lambda x: x['title'])
         return l1 + l2
 
-    def createGUI(self, config, max_row_count=8):
+    def create_gui(self, config, max_row_count=8):
         bg_color = '#e6e6ff'
         secondary_color = '#b28fc7'
         button_color = '#f7e4d0'
@@ -29,11 +32,13 @@ class AnimeWatchListGUI:
         self.root.title("Anime Watch List")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.resizable(False, False)
+        self.root.geometry('+400+250')
 
         menu = tk.Menu(self.root)
         self.root.config(menu=menu)
         options_menu = tk.Menu(menu, tearoff=0)
         menu.add_cascade(label="Options", menu=options_menu)
+        options_menu.add_command(label="Reload", command=self.on_reload)
         options_menu.add_command(label="Edit the config file", command=self.on_edit_config)
 
         body_frame = tk.Frame(self.root, bg=secondary_color)
@@ -78,6 +83,10 @@ class AnimeWatchListGUI:
         row_height = max(title_label.winfo_height(), ep_label.winfo_height(), button.winfo_height()) + pady * 2
         row_width = title_label.winfo_width() + ep_label.winfo_width() + button.winfo_width() + padx * 2
         self.canvas.config(width=row_width, height=row_height * max_row_count, yscrollincrement=row_height)
+
+    def on_reload(self):
+        self.on_close()
+        self.run()
 
     def on_close(self):
         self.root.destroy()
