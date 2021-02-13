@@ -15,7 +15,7 @@ class ConfigGenerator:
     def update_config(self, config):
         with open(self.config_filename, 'w') as f:
             for entry in config:
-                f.write(f'{entry["url"]}\n')
+                f.write(f'{entry["current_ep_url"]}\n')
 
     def get_urls(self):
         with open(self.config_filename, 'r') as f:
@@ -32,9 +32,10 @@ class ConfigGenerator:
             ep = parts[-1]
         self.config.append({
             'title': title,
-            'url': url,
+            'current_ep_url': url,
             'next_ep_url': next_ep_url,
-            'ep': int(ep)
+            'ep': int(ep),
+            'myanimelist_url': f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime'
         })
 
     def get_page_title_and_next_ep_url(self, url):

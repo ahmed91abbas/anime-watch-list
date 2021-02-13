@@ -66,22 +66,24 @@ class AnimeWatchListGUI:
         padx = 15
         pady = 5
         title_width = 50
-        component_config = {'height': 2, 'bg': bg_color, 'font': ('calibri', 16)}
+        component_config = {'height': 2, 'bg': bg_color, 'font': ('calibri', 16), 'highlightthickness': 0, 'border': 0}
         for i, c in enumerate(config):
             grid_config = {'pady': pady, 'row': i}
-            title_label = tk.Label(scrollable_frame, text=self.trim_text(c['title'], title_width), **component_config, width=title_width)
-            title_label.grid(**grid_config, column=0)
-            ep_label = tk.Label(scrollable_frame, text=f'#{c["ep"]}', **component_config, width=5, anchor="w")
-            ep_label.grid(**grid_config, column=1)
+            title_button = tk.Button(scrollable_frame, text=self.trim_text(c['title'], title_width), **component_config, width=title_width,\
+                command=partial(self.on_open_page, i, c['myanimelist_url']))
+            title_button.grid(**grid_config, column=0)
+            ep_button = tk.Button(scrollable_frame, text=f'#{c["ep"]}', **component_config, width=5, anchor="w",\
+                command=partial(self.on_open_page, i, c['current_ep_url'], close=True))
+            ep_button.grid(**grid_config, column=1)
             button = tk.Button(scrollable_frame, text="Watch next ep", bg=button_color, font=component_config['font'], highlightthickness=2,\
-                activebackground=bg_color, compound=tk.CENTER, command=partial(self.on_open_page, i, c['next_ep_url']))
+                activebackground=bg_color, compound=tk.CENTER, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
             if not c['next_ep_url']:
                 button.config(state='disabled')
             button.grid(**grid_config, padx=padx, column=2)
 
         self.canvas.update_idletasks()
-        row_height = max(title_label.winfo_height(), ep_label.winfo_height(), button.winfo_height()) + pady * 2
-        row_width = title_label.winfo_width() + ep_label.winfo_width() + button.winfo_width() + padx * 2
+        row_height = max(title_button.winfo_height(), ep_button.winfo_height(), button.winfo_height()) + pady * 2
+        row_width = title_button.winfo_width() + ep_button.winfo_width() + button.winfo_width() + padx * 2
         self.canvas.config(width=row_width, height=row_height * max_row_count, yscrollincrement=row_height)
 
     def on_reload(self):
@@ -94,11 +96,13 @@ class AnimeWatchListGUI:
     def on_mousewheel(self, event):
         self.canvas.yview_scroll(-1*(event.delta//120), "units")
 
-    def on_open_page(self, index, url):
-        self.config[index]['url'] = self.config[index]['next_ep_url']
-        self.generator.update_config(self.config)
+    def on_open_page(self, index, url, update_config=False, close=False):
+        if update_config:
+            self.config[index]['current_ep_url'] = self.config[index]['next_ep_url']
+            self.generator.update_config(self.config)
         webbrowser.open(url, new=0, autoraise=True)
-        self.on_close()
+        if close:
+            self.on_close()
 
     def on_edit_config(self):
         file_path = self.generator.get_config_filename()
