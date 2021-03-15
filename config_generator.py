@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import threading
 from bs4 import BeautifulSoup
@@ -13,6 +14,7 @@ class ConfigGenerator:
         return self.config_filename
 
     def update_config(self, config):
+        config = sorted(config, key=lambda x: x['title'])
         with open(self.config_filename, 'w') as f:
             for entry in config:
                 f.write(f'{entry["current_ep_url"]}\n')
@@ -22,19 +24,18 @@ class ConfigGenerator:
             return [line.rstrip() for line in f.readlines()]
 
     def get_details(self, url):
-        parts = url.split('/')[-1].split('-')
         if '/category/' in url:
             next_ep_url = f'{url.replace("category/", "")}-episode-1'
             title, _ = self.get_page_title_and_next_ep_url(next_ep_url)
             ep = 0
         else:
             title, next_ep_url = self.get_page_title_and_next_ep_url(url)
-            ep = parts[-1]
+            ep =  url[url.index('episode-')+len('episode-'):]
         self.config.append({
             'title': title,
             'current_ep_url': url,
             'next_ep_url': next_ep_url,
-            'ep': int(ep),
+            'ep': ep,
             'myanimelist_url': f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime'
         })
 
