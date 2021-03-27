@@ -3,3 +3,4 @@ env
 dist
 build
 anime_watch_list.spec
+.vscode
