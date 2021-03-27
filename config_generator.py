@@ -27,7 +27,7 @@ class ConfigGenerator:
         if '/category/' in url:
             next_ep_url = f'{url.replace("category/", "")}-episode-1'
             title, _ = self.get_page_title_and_next_ep_url(next_ep_url)
-            ep = 0
+            ep = '0'
         else:
             title, next_ep_url = self.get_page_title_and_next_ep_url(url)
             ep =  url[url.index('episode-')+len('episode-'):]
@@ -36,7 +36,7 @@ class ConfigGenerator:
             'current_ep_url': url,
             'next_ep_url': next_ep_url,
             'ep': ep,
-            'myanimelist_url': f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime'
+            'myanimelist_url': f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
         })
 
     def get_page_title_and_next_ep_url(self, url):
