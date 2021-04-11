@@ -24,8 +24,8 @@ class ConfigGenerator:
             return [line.rstrip() for line in f.readlines()]
 
     def get_details(self, url):
-        category_match = re.match('^https://gogoanime.[a-z]+/category/', url)
-        episode_match = re.match('^https://gogoanime.[a-z]+/.*-episode-(\d+(-\d+)?)$', url)
+        category_match = re.match('^https://.*.?gogoanime.[a-z]+/category/', url)
+        episode_match = re.match('^https://.*.?gogoanime.[a-z]+/.*-episode-(\d+(-\d+)?)$', url)
         if category_match:
             title, next_ep_url, myanimelist_url = self.get_category_page_info(url)
             ep = '0'
