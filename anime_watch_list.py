@@ -21,8 +21,9 @@ class AnimeWatchListGUI:
         self.mainloop()
 
     def sort_config(self, config):
+        config = sorted(config, key=lambda x: x['title'])
         l1 = sorted(filter(lambda x: x['next_ep_url'], config), key=lambda x: float(x['ep'].replace('-', '.')), reverse=True)
-        l2 = sorted(filter(lambda x: not x['next_ep_url'], config), key=lambda x: x['title'])
+        l2 = list(filter(lambda x: not x['next_ep_url'], config))
         return l1 + l2
 
     def create_gui(self, config, max_row_count=8):
