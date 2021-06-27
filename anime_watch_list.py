@@ -1,8 +1,11 @@
 import sys
 import os
+import io
 import subprocess
 import webbrowser
 import tkinter as tk
+from PIL import Image, ImageTk
+from urllib.request import Request, urlopen
 from functools import partial
 from config_generator import ConfigGenerator
 
@@ -66,26 +69,38 @@ class AnimeWatchListGUI:
 
         padx = 15
         pady = 5
-        title_width = 50
+        title_width = 45
         component_config = {'height': 2, 'bg': bg_color, 'font': ('calibri', 16), 'highlightthickness': 0, 'border': 0}
+        img_width = img_height = component_config['height'] * 29
         for i, c in enumerate(config):
             grid_config = {'pady': pady, 'row': i}
+            image = self.get_image_data(c['cover_url'], img_width, img_height)
+            img_label = tk.Label(scrollable_frame, image=image)
+            img_label.image = image
+            img_label.grid(**grid_config, padx=padx, column=0)
             title_button = tk.Button(scrollable_frame, text=self.trim_text(c['title'], title_width), **component_config, width=title_width,\
                 command=partial(self.on_open_page, i, c['myanimelist_url']))
-            title_button.grid(**grid_config, column=0)
+            title_button.grid(**grid_config, column=1)
             ep_button = tk.Button(scrollable_frame, text=f'#{c["ep"]}', **component_config, width=5, anchor="w",\
                 command=partial(self.on_open_page, i, c['current_ep_url'], close=True))
-            ep_button.grid(**grid_config, column=1)
+            ep_button.grid(**grid_config, column=2)
             button = tk.Button(scrollable_frame, text="Watch next ep", bg=button_color, font=component_config['font'], highlightthickness=2,\
                 activebackground=bg_color, compound=tk.CENTER, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
             if not c['next_ep_url']:
                 button.config(state='disabled')
-            button.grid(**grid_config, padx=padx, column=2)
+            button.grid(**grid_config, padx=padx, column=3)
 
         self.canvas.update_idletasks()
-        row_height = max(title_button.winfo_height(), ep_button.winfo_height(), button.winfo_height()) + pady * 2
-        row_width = title_button.winfo_width() + ep_button.winfo_width() + button.winfo_width() + padx * 2
+        row_height = max(img_label.winfo_height(), title_button.winfo_height(), ep_button.winfo_height(), button.winfo_height()) + pady * 2
+        row_width = img_label.winfo_width() + title_button.winfo_width() + ep_button.winfo_width() + button.winfo_width() + padx * 4
         self.canvas.config(width=row_width, height=row_height * min(max_row_count, len(config)), yscrollincrement=row_height)
+
+    def get_image_data(self, url, width, height):
+        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        raw_data = urlopen(req).read()
+        img = Image.open(io.BytesIO(raw_data))
+        img = img.resize((width,height), Image.ANTIALIAS)
+        return ImageTk.PhotoImage(img)
 
     def on_reload(self):
         self.on_close()
