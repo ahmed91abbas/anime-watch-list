@@ -27,18 +27,20 @@ class ConfigGenerator:
         category_match = re.match('^https://.*.?gogoanime.[a-z]+/category/', url)
         episode_match = re.match('^https://.*.?gogoanime.[a-z]+/.*-episode-(\d+(-\d+)?)$', url)
         if category_match:
-            title, next_ep_url, myanimelist_url = self.get_category_page_info(url)
+            title, next_ep_url, myanimelist_url, cover_url = self.get_category_page_info(url)
             ep = '0'
         elif episode_match:
-            title, next_ep_url, myanimelist_url = self.get_episode_page_info(url)
-            ep =  episode_match.group(1)
+            title, next_ep_url, myanimelist_url, cover_url = self.get_episode_page_info(url)
+            ep = episode_match.group(1)
         else:
             title = f'[UNSUPPORTED URL] {url}'
+            cover_url = 'https://uxwing.com/wp-content/themes/uxwing/download/07-design-and-development/image-not-found.png'
             myanimelist_url = ''
             next_ep_url = ''
             ep = '-1'
         self.config.append({
             'title': title,
+            'cover_url': cover_url,
             'current_ep_url': url,
             'next_ep_url': next_ep_url,
             'ep': ep,
@@ -49,6 +51,7 @@ class ConfigGenerator:
         response = requests.get(url)
         soup = BeautifulSoup(response.text, 'html.parser')
         title = soup.find('div', {'class': 'anime-info'}).a.text
+        cover_url = soup.find(itemprop='image').get('content')
         myanimelist_url = self.build_myanimelist_url(title)
         next_ep_url = ''
         try:
@@ -56,12 +59,13 @@ class ConfigGenerator:
             next_ep_url = os.path.dirname(url) + next_ep_href
         except:
             pass
-        return title, next_ep_url, myanimelist_url
+        return title, next_ep_url, myanimelist_url, cover_url
 
     def get_category_page_info(self, url):
         response = requests.get(url)
         soup = BeautifulSoup(response.text, 'html.parser')
         title = soup.find('div', {'class': 'anime_info_body_bg'}).h1.text
+        cover_url = soup.find(itemprop='image').get('content')
         myanimelist_url = self.build_myanimelist_url(title)
         ep_end = soup.find('div', {'class': 'anime_video_body'}).a.get('ep_end')
         next_ep_url = ''
@@ -69,7 +73,7 @@ class ConfigGenerator:
             next_ep_url = f'{url.replace("category/", "")}-episode-1'
         else:
             title = f'[Not yet aired] {title}'
-        return title, next_ep_url, myanimelist_url
+        return title, next_ep_url, myanimelist_url, cover_url
 
     def build_myanimelist_url(self, title):
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
