@@ -24,28 +24,37 @@ class ConfigGenerator:
             return [line.rstrip() for line in f.readlines()]
 
     def get_details(self, url):
+        self.config.append(self.get_info_from_url(url))
+
+    def get_info_from_url(self, url):
         category_match = re.match('^https://.*.?gogoanime.[a-z]+/category/', url)
         episode_match = re.match('^https://.*.?gogoanime.[a-z]+/.*-episode-(\d+(-\d+)?)$', url)
-        if category_match:
-            title, next_ep_url, myanimelist_url, cover_url = self.get_category_page_info(url)
-            ep = '0'
-        elif episode_match:
-            title, next_ep_url, myanimelist_url, cover_url = self.get_episode_page_info(url)
-            ep = episode_match.group(1)
-        else:
-            title = f'[UNSUPPORTED URL] {url}'
-            cover_url = 'https://uxwing.com/wp-content/themes/uxwing/download/07-design-and-development/image-not-found.png'
-            myanimelist_url = ''
-            next_ep_url = ''
-            ep = '-1'
-        self.config.append({
-            'title': title,
-            'cover_url': cover_url,
-            'current_ep_url': url,
-            'next_ep_url': next_ep_url,
-            'ep': ep,
-            'myanimelist_url': myanimelist_url
-        })
+        result = None
+        try:
+            if category_match:
+                result = self.get_category_page_info(url)
+                result['ep'] = '0'
+            elif episode_match:
+                result = self.get_episode_page_info(url)
+                result['ep'] = episode_match.group(1)
+        except:
+            result = self.get_unsupported_url_info(url, warning_message='Failed')
+            result['ep'] = '-1'
+
+        if not result:
+            result = self.get_unsupported_url_info(url)
+            result['ep'] = '-1'
+
+        result['current_ep_url'] = url
+        return result
+
+    def get_unsupported_url_info(self, url, warning_message='UNSUPPORTED URL'):
+        title = f'[{warning_message}] {url}'
+        cover_url = 'https://uxwing.com/wp-content/themes/uxwing/download/07-design-and-development/image-not-found.png'
+        myanimelist_url = ''
+        next_ep_url = ''
+        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'cover_url': cover_url}
+
 
     def get_episode_page_info(self, url):
         response = requests.get(url)
@@ -54,12 +63,10 @@ class ConfigGenerator:
         cover_url = soup.find(itemprop='image').get('content')
         myanimelist_url = self.build_myanimelist_url(title)
         next_ep_url = ''
-        try:
-            next_ep_href = soup.find('div', {'class': 'anime_video_body_episodes_r'}).a['href']
-            next_ep_url = os.path.dirname(url) + next_ep_href
-        except:
-            pass
-        return title, next_ep_url, myanimelist_url, cover_url
+        next_ep_div_a = soup.find('div', {'class': 'anime_video_body_episodes_r'}).a
+        if next_ep_div_a:
+            next_ep_url = os.path.dirname(url) + next_ep_div_a['href']
+        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'cover_url': cover_url}
 
     def get_category_page_info(self, url):
         response = requests.get(url)
@@ -73,7 +80,7 @@ class ConfigGenerator:
             next_ep_url = f'{url.replace("category/", "")}-episode-1'
         else:
             title = f'[Not yet aired] {title}'
-        return title, next_ep_url, myanimelist_url, cover_url
+        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'cover_url': cover_url}
 
     def build_myanimelist_url(self, title):
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
