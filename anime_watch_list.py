@@ -8,6 +8,7 @@ from PIL import Image, ImageTk
 from urllib.request import Request, urlopen
 from functools import partial
 from config_generator import ConfigGenerator
+from threading import Thread
 
 
 class AnimeWatchListGUI:
@@ -16,9 +17,14 @@ class AnimeWatchListGUI:
         self.run()
 
     def run(self):
-        self.config = self.sort_config(self.generator.get_config())
-        self.create_gui(self.config)
+        elements = self.create_gui(self.generator.get_skeleton_config())
+        Thread(target=self.add_config_to_gui, args=(elements, )).start()
         self.mainloop()
+
+    def add_config_to_gui(self, elements):
+        self.config = self.generator.get_config()
+        self.config = self.sort_config(self.config)
+        self.update_gui(self.config, elements)
 
     def sort_config(self, config):
         config = sorted(config, key=lambda x: x['title'])
@@ -73,28 +79,57 @@ class AnimeWatchListGUI:
         title_width = 45
         component_config = {'height': 2, 'bg': bg_color, 'font': ('calibri', 16), 'highlightthickness': 0, 'border': 0}
         img_width = img_height = component_config['height'] * 29
+        elements = []
         for i, c in enumerate(config):
+            element = {}
             grid_config = {'pady': pady, 'row': i}
             image = self.get_image_data(c['cover_url'], img_width, img_height)
             img_label = tk.Label(scrollable_frame, image=image)
             img_label.image = image
             img_label.grid(**grid_config, padx=padx, column=0)
-            title_button = tk.Button(scrollable_frame, text=self.trim_text(c['title'], title_width), **component_config, width=title_width,\
-                command=partial(self.on_open_page, i, c['myanimelist_url']))
+            element['img_label'] = img_label
+            element['img_width'] = img_width
+            element['img_height'] = img_height
+
+            title_button = tk.Button(scrollable_frame, text=self.trim_text(c['title'], title_width), **component_config, width=title_width)
             title_button.grid(**grid_config, column=1)
-            ep_button = tk.Button(scrollable_frame, text=f'#{c["ep"]}', **component_config, width=5, anchor="w",\
-                command=partial(self.on_open_page, i, c['current_ep_url'], close=True))
+            element['title_button'] = title_button
+            element['title_width'] = title_width
+
+            ep_button = tk.Button(scrollable_frame, text=f'#{c["ep"]}', **component_config, width=5, anchor="w")
             ep_button.grid(**grid_config, column=2)
+            element['ep_button'] = ep_button
+
             button = tk.Button(scrollable_frame, text="Watch next ep", bg=button_color, font=component_config['font'], highlightthickness=2,\
-                activebackground=bg_color, compound=tk.CENTER, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
-            if not c['next_ep_url']:
-                button.config(state='disabled')
+                activebackground=bg_color, state='disabled', compound=tk.CENTER)
             button.grid(**grid_config, padx=padx, column=3)
+            element['button'] = button
+            elements.append(element)
 
         self.canvas.update_idletasks()
         row_height = max(img_label.winfo_height(), title_button.winfo_height(), ep_button.winfo_height(), button.winfo_height()) + pady * 2
         row_width = img_label.winfo_width() + title_button.winfo_width() + ep_button.winfo_width() + button.winfo_width() + padx * 4
         self.canvas.config(width=row_width, height=row_height * min(max_row_count, len(config)), yscrollincrement=row_height)
+        return elements
+
+    def update_gui(self, config, elements):
+        if len(config) != len(elements):
+            raise Exception('config and elements must be of the same length')
+
+        for i in range(len(config)):
+            c = config[i]
+            e = elements[i]
+
+            image = self.get_image_data(c['cover_url'], e['img_width'], e['img_height'])
+            e['img_label'].config(image=image)
+            e['img_label'].image = image
+
+            e['title_button'].config(text=self.trim_text(c['title'], e['title_width']), command=partial(self.on_open_page, i, c['myanimelist_url']))
+
+            e['ep_button'].config(text=f'#{c["ep"]}', command=partial(self.on_open_page, i, c['current_ep_url'], close=True))
+
+            state  =('disabled', 'normal')[bool(c['next_ep_url'])]
+            e['button'].config(state=state, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
 
     def get_image_data(self, url, width, height):
         if url:

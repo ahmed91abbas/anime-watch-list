@@ -1,7 +1,7 @@
 import os
 import re
 import requests
-import threading
+from threading import Thread
 from bs4 import BeautifulSoup
 
 
@@ -80,11 +80,15 @@ class ConfigGenerator:
     def build_myanimelist_url(self, title):
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
 
+    def get_skeleton_config(self):
+        data = {'title': 'Loading...', 'current_ep_url': '', 'next_ep_url': '', 'myanimelist_url': '', 'cover_url': '', 'ep': '-1'}
+        return [data]*len(self.get_urls())
+
     def get_config(self):
         self.config = []
         threads = []
         for url in self.get_urls():
-            t = threading.Thread(target=self.get_details, args=(url, ))
+            t = Thread(target=self.get_details, args=(url, ))
             t.start()
             threads.append(t)
         for thread in threads:
