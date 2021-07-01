@@ -3,7 +3,7 @@ GUI based on the gogoanime website in which you can keep track of the anime you 
 
 All you need to do is add the URLs of the anime you want to watch in the config.txt file and run the application.
 
-Download the latest release for Windows [here](https://github.com/ahmed91abbas/anime-watch-list/releases/download/1.0.0/anime-watch-list.zip).
+Download the latest release for Windows from [here](https://github.com/ahmed91abbas/anime-watch-list/releases/latest).
 
 ![preview](images/preview.png)
 
