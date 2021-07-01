@@ -35,6 +35,7 @@ def call_process(root_path):
               '--onefile',
               '--noconsole',
               '--paths', site_packages,
+              '--add-data', 'images/image-not-found.png;images',
               'anime_watch_list.py']
     subprocess.call(params)
 

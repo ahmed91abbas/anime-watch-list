@@ -49,12 +49,7 @@ class ConfigGenerator:
         return result
 
     def get_unsupported_url_info(self, url, warning_message='UNSUPPORTED URL'):
-        title = f'[{warning_message}] {url}'
-        cover_url = 'https://uxwing.com/wp-content/themes/uxwing/download/07-design-and-development/image-not-found.png'
-        myanimelist_url = ''
-        next_ep_url = ''
-        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'cover_url': cover_url}
-
+        return {'title': f'[{warning_message}] {url}', 'next_ep_url': '', 'myanimelist_url': '', 'cover_url': ''}
 
     def get_episode_page_info(self, url):
         response = requests.get(url)

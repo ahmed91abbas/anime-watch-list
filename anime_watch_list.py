@@ -97,11 +97,23 @@ class AnimeWatchListGUI:
         self.canvas.config(width=row_width, height=row_height * min(max_row_count, len(config)), yscrollincrement=row_height)
 
     def get_image_data(self, url, width, height):
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        raw_data = urlopen(req).read()
-        img = Image.open(io.BytesIO(raw_data))
+        if url:
+            req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+            raw_data = urlopen(req).read()
+            img = Image.open(io.BytesIO(raw_data))
+        else:
+            img = Image.open(self.resource_path(os.path.join('images', 'image-not-found.png')))
         img = img.resize((width,height), Image.ANTIALIAS)
         return ImageTk.PhotoImage(img)
+
+    def resource_path(self, relative_path):
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
 
     def on_reload(self):
         self.on_close()
