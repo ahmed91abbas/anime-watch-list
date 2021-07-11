@@ -24,7 +24,11 @@ class ConfigGenerator:
             return [line.rstrip() for line in f.readlines()]
 
     def get_details(self, url):
-        self.config.append(self.get_info_from_url(url))
+        result = self.get_info_from_url(url)
+        for key in result:
+            if key.endswith('_url'):
+                result[key] = result[key].replace(' ', '%20')
+        self.config.append(result)
 
     def get_info_from_url(self, url):
         category_match = re.match('^https://.*.?gogoanime.[a-z]+/category/', url)
