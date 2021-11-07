@@ -56,7 +56,7 @@ class ConfigGenerator:
         return {'title': f'[{warning_message}] {url}', 'next_ep_url': '', 'myanimelist_url': '', 'cover_url': ''}
 
     def get_episode_page_info(self, url):
-        response = requests.get(url)
+        response = requests.get(url, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
         soup = BeautifulSoup(response.text, 'html.parser')
         title = soup.find('div', {'class': 'anime-info'}).a.text
         cover_url = soup.find(itemprop='image').get('content')
@@ -68,7 +68,7 @@ class ConfigGenerator:
         return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'cover_url': cover_url}
 
     def get_category_page_info(self, url):
-        response = requests.get(url)
+        response = requests.get(url, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
         soup = BeautifulSoup(response.text, 'html.parser')
         title = soup.find('div', {'class': 'anime_info_body_bg'}).h1.text
         cover_url = soup.find(itemprop='image').get('content')
