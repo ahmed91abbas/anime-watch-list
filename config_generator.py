@@ -13,6 +13,10 @@ class ConfigGenerator:
     def get_config_filename(self):
         return self.config_filename
 
+    def add_line_to_config(self, line):
+        with open(self.config_filename, 'a') as f:
+            f.write(f'{line}\n')
+
     def update_config(self, config):
         config = sorted(config, key=lambda x: x['title'])
         with open(self.config_filename, 'w') as f:

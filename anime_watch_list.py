@@ -48,12 +48,23 @@ class AnimeWatchListGUI:
         self.root.config(menu=menu)
         options_menu = tk.Menu(menu, tearoff=0)
         menu.add_cascade(label="Options", menu=options_menu)
+        options_menu.add_command(label="Add to list", command=self.on_add)
         options_menu.add_command(label="Reload", command=self.on_reload)
         options_menu.add_command(label="Edit the config file", command=self.on_edit_config)
         options_menu.add_command(label="Open in Github", command=partial(self.on_open_page, 0, 'https://github.com/ahmed91abbas/anime-watch-list'))
 
+        self.site_frame = tk.Frame(self.root, bg=secondary_color)
+        self.site_entry = tk.Entry(self.site_frame, width=60, bg=bg_color, font=('calibri', 12))
+        self.site_entry.pack(side='left', padx=20, ipady=4)
+        site_button_config = {'font': ('calibri', 12), 'width': 10, 'height': 1, 'bg': button_color, 'activebackground': bg_color, 'compound': tk.CENTER, 'highlightthickness': 2}
+        site_button_pack_config = {'side': 'left', 'padx': 5, 'pady': 5}
+        site_add_button = tk.Button(self.site_frame, text="Add", **site_button_config, command=self.on_site_add)
+        site_add_button.pack(**site_button_pack_config)
+        site_cancel_button = tk.Button(self.site_frame, text="Cancel", **site_button_config, command=self.on_site_cancel)
+        site_cancel_button.pack(**site_button_pack_config)
+
         body_frame = tk.Frame(self.root, bg=secondary_color)
-        body_frame.pack()
+        body_frame.grid(row=1)
 
         if not config:
             body_frame.grid_propagate(False)
@@ -149,6 +160,32 @@ class AnimeWatchListGUI:
             base_path = os.path.abspath(".")
 
         return os.path.join(base_path, relative_path)
+
+    def is_valid_url(self, text):
+        if text.startswith('http://') or text.startswith('https://') and len(text) >= 12:
+            return True
+        return False
+
+    def on_add(self):
+        self.site_entry.delete(0, 'end')
+        self.site_frame.grid(row=0, padx=10, pady=10)
+        try:
+            clipboard = self.root.clipboard_get()
+        except:
+            clipboard = ""
+        if self.is_valid_url(clipboard):
+            self.site_entry.insert(0, clipboard)
+
+    def on_site_add(self):
+        site = self.site_entry.get().rstrip()
+        if self.is_valid_url(site):
+            self.generator.add_line_to_config(site)
+            self.on_reload()
+        else:
+            self.site_frame.grid_forget()
+
+    def on_site_cancel(self):
+        self.site_frame.grid_forget()
 
     def on_reload(self):
         self.on_close()
