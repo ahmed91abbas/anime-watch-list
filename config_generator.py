@@ -3,10 +3,23 @@ import re
 import requests
 from threading import Thread
 from bs4 import BeautifulSoup
+from urllib.request import Request, urlopen
+from urllib.parse import urlsplit,urlunsplit, quote
 
 
 class ConfigGenerator:
     def __init__(self, config_filename='config.txt'):
+        self.base_info = {
+            'title': 'Loading...',
+            'current_ep_url': '',
+            'next_ep_url': '',
+            'myanimelist_url': '',
+            'ep': '-1',
+            'image': {
+                'url': '',
+                'raw_data': None
+            }
+        }
         self.config_filename = config_filename
         self.config = []
 
@@ -47,17 +60,16 @@ class ConfigGenerator:
                 result['ep'] = episode_match.group(1)
         except:
             result = self.get_unsupported_url_info(url, warning_message='Failed')
-            result['ep'] = '-1'
 
         if not result:
             result = self.get_unsupported_url_info(url)
-            result['ep'] = '-1'
 
         result['current_ep_url'] = url
+        result['image']['raw_data'] = self.get_image_data(result['image']['url'])
         return result
 
     def get_unsupported_url_info(self, url, warning_message='UNSUPPORTED URL'):
-        return {'title': f'[{warning_message}] {url}', 'next_ep_url': '', 'myanimelist_url': '', 'cover_url': ''}
+        return {**self.base_info, 'title': f'[{warning_message}] {url}'}
 
     def get_episode_page_info(self, url):
         response = requests.get(url, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
@@ -69,7 +81,7 @@ class ConfigGenerator:
         next_ep_div_a = soup.find('div', {'class': 'anime_video_body_episodes_r'}).a
         if next_ep_div_a:
             next_ep_url = os.path.dirname(url) + next_ep_div_a['href']
-        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'cover_url': cover_url}
+        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': { 'url': cover_url }}
 
     def get_category_page_info(self, url):
         response = requests.get(url, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
@@ -83,14 +95,27 @@ class ConfigGenerator:
             next_ep_url = f'{url.replace("category/", "")}-episode-1'
         else:
             title = f'[Not yet aired] {title}'
-        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'cover_url': cover_url}
+        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': { 'url': cover_url }}
 
     def build_myanimelist_url(self, title):
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
 
+    def get_image_data(self, url):
+        try:
+            encoded_url = self.encode_url(url)
+            req = Request(encoded_url, headers={'User-Agent': 'Mozilla/5.0'})
+            raw_data = urlopen(req).read()
+            return raw_data
+        except:
+            return None
+
+    def encode_url(self, url):
+        protocol, domain, path, query, fragment = urlsplit(url)
+        path = quote(path)
+        return urlunsplit((protocol, domain, path, query, fragment))
+
     def get_skeleton_config(self):
-        data = {'title': 'Loading...', 'current_ep_url': '', 'next_ep_url': '', 'myanimelist_url': '', 'cover_url': '', 'ep': '-1'}
-        return [data]*len(self.get_urls())
+        return [self.base_info]*len(self.get_urls())
 
     def get_config(self):
         self.config = []

@@ -5,7 +5,6 @@ import subprocess
 import webbrowser
 import tkinter as tk
 from PIL import Image, ImageTk
-from urllib.request import Request, urlopen
 from functools import partial
 from config_generator import ConfigGenerator
 from threading import Thread
@@ -94,7 +93,7 @@ class AnimeWatchListGUI:
         for i, c in enumerate(config):
             element = {}
             grid_config = {'pady': pady, 'row': i}
-            image = self.get_image_data(c['cover_url'], img_width, img_height)
+            image = self.get_image_data(c['image']['raw_data'], img_width, img_height)
             img_label = tk.Label(scrollable_frame, image=image)
             img_label.image = image
             img_label.grid(**grid_config, padx=padx, column=0)
@@ -131,7 +130,7 @@ class AnimeWatchListGUI:
             c = config[i]
             e = elements[i]
 
-            image = self.get_image_data(c['cover_url'], e['img_width'], e['img_height'])
+            image = self.get_image_data(c['image']['raw_data'], e['img_width'], e['img_height'])
             e['img_label'].config(image=image)
             e['img_label'].image = image
 
@@ -142,11 +141,9 @@ class AnimeWatchListGUI:
             state  =('disabled', 'normal')[bool(c['next_ep_url'])]
             e['button'].config(state=state, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
 
-    def get_image_data(self, url, width, height):
-        if url:
-            req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-            raw_data = urlopen(req).read()
-            img = Image.open(io.BytesIO(raw_data))
+    def get_image_data(self, image_raw_data, width, height):
+        if image_raw_data:
+            img = Image.open(io.BytesIO(image_raw_data))
         else:
             img = Image.open(self.resource_path(os.path.join('images', 'image-not-found.png')))
         img = img.resize((width,height), Image.ANTIALIAS)
