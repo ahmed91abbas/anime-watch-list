@@ -16,8 +16,8 @@ class AnimeWatchListGUI:
         self.run()
 
     def run(self):
-        elements = self.create_gui(self.generator.get_skeleton_config())
-        Thread(target=self.add_config_to_gui, args=(elements, )).start()
+        self.elements = self.create_gui(self.generator.get_skeleton_config())
+        Thread(target=self.add_config_to_gui, args=(self.elements, )).start()
         self.mainloop()
 
     def add_config_to_gui(self, elements):
@@ -48,19 +48,27 @@ class AnimeWatchListGUI:
         options_menu = tk.Menu(menu, tearoff=0)
         menu.add_cascade(label="Options", menu=options_menu)
         options_menu.add_command(label="Add to list", command=self.on_add)
+        options_menu.add_command(label="Edit", command=self.on_edit)
         options_menu.add_command(label="Reload", command=self.on_reload)
         options_menu.add_command(label="Edit the config file", command=self.on_edit_config)
         options_menu.add_command(label="Open in Github", command=partial(self.on_open_page, 0, 'https://github.com/ahmed91abbas/anime-watch-list'))
 
+        button_config = {'font': ('calibri', 12), 'width': 10, 'height': 1, 'bg': button_color, 'activebackground': bg_color, 'compound': tk.CENTER, 'highlightthickness': 2}
+        button_pack_config = {'side': 'left', 'padx': 5, 'pady': 5}
         self.site_frame = tk.Frame(self.root, bg=secondary_color)
         self.site_entry = tk.Entry(self.site_frame, width=60, bg=bg_color, font=('calibri', 12))
         self.site_entry.pack(side='left', padx=20, ipady=4)
-        site_button_config = {'font': ('calibri', 12), 'width': 10, 'height': 1, 'bg': button_color, 'activebackground': bg_color, 'compound': tk.CENTER, 'highlightthickness': 2}
-        site_button_pack_config = {'side': 'left', 'padx': 5, 'pady': 5}
-        site_add_button = tk.Button(self.site_frame, text="Add", **site_button_config, command=self.on_site_add)
-        site_add_button.pack(**site_button_pack_config)
-        site_cancel_button = tk.Button(self.site_frame, text="Cancel", **site_button_config, command=self.on_site_cancel)
-        site_cancel_button.pack(**site_button_pack_config)
+        site_add_button = tk.Button(self.site_frame, text="Add", **button_config, command=self.on_site_add)
+        site_add_button.pack(**button_pack_config)
+        site_cancel_button = tk.Button(self.site_frame, text="Cancel", **button_config, command=self.on_site_cancel)
+        site_cancel_button.pack(**button_pack_config)
+
+        self.edit_frame = tk.Frame(self.root, bg=secondary_color)
+        button_pack_config = {'side': 'left', 'padx': 15}
+        save_button = tk.Button(self.edit_frame, text="Save", **button_config, command=self.on_edit_save)
+        save_button.pack(**button_pack_config)
+        edit_cancel_button = tk.Button(self.edit_frame, text="Cancel", **button_config, command=self.on_edit_cancel)
+        edit_cancel_button.pack(**button_pack_config)
 
         body_frame = tk.Frame(self.root, bg=secondary_color)
         body_frame.grid(row=1)
@@ -110,6 +118,9 @@ class AnimeWatchListGUI:
             ep_button.grid(**grid_config, column=2)
             element['ep_button'] = ep_button
 
+            ep_entry = tk.Entry(scrollable_frame, width=3, font=component_config['font'])
+            element['ep_entry'] = ep_entry
+
             button = tk.Button(scrollable_frame, text="Watch next ep", bg=button_color, font=component_config['font'], highlightthickness=2,\
                 activebackground=bg_color, state='disabled', compound=tk.CENTER)
             button.grid(**grid_config, padx=padx, column=3)
@@ -138,7 +149,7 @@ class AnimeWatchListGUI:
 
             e['ep_button'].config(text=f'#{c["ep"]}', command=partial(self.on_open_page, i, c['current_ep_url'], close=True))
 
-            state  =('disabled', 'normal')[bool(c['next_ep_url'])]
+            state = ('disabled', 'normal')[bool(c['next_ep_url'])]
             e['button'].config(state=state, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
 
     def get_image_data(self, image_raw_data, width, height):
@@ -184,6 +195,21 @@ class AnimeWatchListGUI:
     def on_site_cancel(self):
         self.site_frame.grid_forget()
 
+    def on_edit_save(self):
+        for i, e in enumerate(self.elements):
+            ep = e['ep_entry'].get()
+            if ep != self.config[i]['ep']:
+                new_url = self.generator.update_url_episode_number(self.config[i]['current_ep_url'], ep)
+                self.config[i]['current_ep_url'] = new_url
+        self.generator.update_config(self.config)
+        self.on_reload()
+
+    def on_edit_cancel(self):
+        self.edit_frame.grid_forget()
+        for e in self.elements:
+            e['ep_entry'].grid_forget()
+            e['ep_button']['state'] = 'normal'
+
     def on_reload(self):
         self.on_close()
         self.run()
@@ -210,6 +236,14 @@ class AnimeWatchListGUI:
             os.startfile(file_path)
         elif os.name == 'posix':
             subprocess.call('xdg-open', file_path)
+
+    def on_edit(self):
+        self.edit_frame.grid(row=2, pady=20)
+        for i, e in enumerate(self.elements):
+            e['ep_entry'].delete(0, 'end')
+            e['ep_entry'].insert(0, self.config[i]['ep'])
+            e['ep_entry'].grid(row=i, column=2)
+            e['ep_button']['state'] = 'disabled'
 
     def mainloop(self):
         tk.mainloop()

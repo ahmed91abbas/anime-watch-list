@@ -20,6 +20,8 @@ class ConfigGenerator:
                 'raw_data': None
             }
         }
+        self.url_category_reg = '^https://.*.?gogoanime.[a-z]+/(category/)'
+        self.url_reg = '^https://.*.?gogoanime.[a-z]+/.*-episode-(\d+(-\d+)?)$'
         self.config_filename = config_filename
         self.config = []
 
@@ -48,8 +50,8 @@ class ConfigGenerator:
         self.config.append(result)
 
     def get_info_from_url(self, url):
-        category_match = re.match('^https://.*.?gogoanime.[a-z]+/category/', url)
-        episode_match = re.match('^https://.*.?gogoanime.[a-z]+/.*-episode-(\d+(-\d+)?)$', url)
+        category_match = re.match(self.url_category_reg, url)
+        episode_match = re.match(self.url_reg, url)
         result = None
         try:
             if category_match:
@@ -92,10 +94,26 @@ class ConfigGenerator:
         ep_end = soup.find('div', {'class': 'anime_video_body'}).a.get('ep_end')
         next_ep_url = ''
         if float(ep_end) > 0:
-            next_ep_url = f'{url.replace("category/", "")}-episode-1'
+            next_ep_url = self.update_url_episode_number(url, '1')
         else:
             title = f'[Not yet aired] {title}'
         return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': { 'url': cover_url }}
+
+    def update_url_episode_number(self, url, ep):
+        if not re.match('^\d+$', ep):
+            return url
+        episode_match = re.match(self.url_reg, url)
+        if episode_match:
+            if ep == '0':
+                url_with_category = url.replace(os.path.dirname(url), os.path.dirname(url) + '/category')
+                return f'{url_with_category.replace(f"-episode-{episode_match.group(1)}", "")}'
+            return url.replace(episode_match.group(1), ep)
+        category_match = re.match(self.url_category_reg, url)
+        if category_match:
+            if ep == '0':
+                return url
+            return f'{url.replace(category_match.group(1), "")}-episode-{ep}'
+        return url
 
     def build_myanimelist_url(self, title):
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
