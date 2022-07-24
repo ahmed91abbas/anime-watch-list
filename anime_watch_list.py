@@ -77,7 +77,7 @@ class AnimeWatchListGUI:
             body_frame.grid_propagate(False)
             tk.Label(body_frame, text="No content found in config.txt", bg=secondary_color, font=('calibri', 22)).grid()
             body_frame.config(width=500, height=300)
-            return
+            return []
 
         self.canvas = tk.Canvas(body_frame, bd=0, highlightthickness=0)
         scrollbar = tk.Scrollbar(body_frame, orient="vertical", command=self.canvas.yview)
@@ -121,15 +121,22 @@ class AnimeWatchListGUI:
             ep_entry = tk.Entry(scrollable_frame, width=3, font=component_config['font'])
             element['ep_entry'] = ep_entry
 
-            button = tk.Button(scrollable_frame, text="Watch next ep", bg=button_color, font=component_config['font'], highlightthickness=2,\
-                activebackground=bg_color, state='disabled', compound=tk.CENTER)
-            button.grid(**grid_config, padx=padx, column=3)
-            element['button'] = button
+            main_button_config = {'bg': button_color, 'activebackground': bg_color, 'compound': tk.CENTER, 'highlightthickness': 2, 'font': component_config['font'], 'width': 12}
+            watch_button = tk.Button(scrollable_frame, text="Watch next ep", state='disabled', **main_button_config)
+            watch_button.grid(**grid_config, padx=padx, column=3)
+            element['watch_button'] = watch_button
+
+            remove_button = tk.Button(scrollable_frame, text="Remove", **main_button_config, command=partial(self.on_remove_button, i))
+            element['remove_button'] = remove_button
+
+            element['marked_for_deletion'] = False
+            element['bg_color'] = bg_color
+
             elements.append(element)
 
         self.canvas.update_idletasks()
-        row_height = max(img_label.winfo_height(), title_button.winfo_height(), ep_button.winfo_height(), button.winfo_height()) + pady * 2
-        row_width = img_label.winfo_width() + title_button.winfo_width() + ep_button.winfo_width() + button.winfo_width() + padx * 4
+        row_height = max(img_label.winfo_height(), title_button.winfo_height(), ep_button.winfo_height(), watch_button.winfo_height()) + pady * 2
+        row_width = img_label.winfo_width() + title_button.winfo_width() + ep_button.winfo_width() + watch_button.winfo_width() + padx * 4
         self.canvas.config(width=row_width, height=row_height * min(max_row_count, len(config)), yscrollincrement=row_height)
         return elements
 
@@ -150,7 +157,7 @@ class AnimeWatchListGUI:
             e['ep_button'].config(text=f'#{c["ep"]}', command=partial(self.on_open_page, i, c['current_ep_url'], close=True))
 
             state = ('disabled', 'normal')[bool(c['next_ep_url'])]
-            e['button'].config(state=state, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
+            e['watch_button'].config(state=state, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
 
     def get_image_data(self, image_raw_data, width, height):
         if image_raw_data:
@@ -196,9 +203,11 @@ class AnimeWatchListGUI:
         self.site_frame.grid_forget()
 
     def on_edit_save(self):
-        for i, e in enumerate(self.elements):
+        for i, e in reversed(list(enumerate(self.elements))):
             ep = e['ep_entry'].get()
-            if ep != self.config[i]['ep']:
+            if e['marked_for_deletion']:
+                del self.config[i]
+            elif ep != self.config[i]['ep']:
                 new_url = self.generator.update_url_episode_number(self.config[i]['current_ep_url'], ep)
                 self.config[i]['current_ep_url'] = new_url
         self.generator.update_config(self.config)
@@ -209,6 +218,10 @@ class AnimeWatchListGUI:
         for e in self.elements:
             e['ep_entry'].grid_forget()
             e['ep_button']['state'] = 'normal'
+            e['remove_button'].grid_forget()
+            e['title_button']['bg'] = e['bg_color']
+            e['ep_button']['bg'] = e['bg_color']
+            e['marked_for_deletion'] = False
 
     def on_reload(self):
         self.on_close()
@@ -244,6 +257,13 @@ class AnimeWatchListGUI:
             e['ep_entry'].insert(0, self.config[i]['ep'])
             e['ep_entry'].grid(row=i, column=2)
             e['ep_button']['state'] = 'disabled'
+            e['remove_button'].grid(row=i, column=3)
+
+    def on_remove_button(self, index):
+        color = self.elements[index]['bg_color'] if self.elements[index]['marked_for_deletion'] else 'orange red'
+        self.elements[index]['title_button']['bg'] = color
+        self.elements[index]['ep_button']['bg'] = color
+        self.elements[index]['marked_for_deletion'] = not self.elements[index]['marked_for_deletion']
 
     def mainloop(self):
         tk.mainloop()
