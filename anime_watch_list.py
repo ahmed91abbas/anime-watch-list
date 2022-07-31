@@ -8,6 +8,7 @@ from PIL import Image, ImageTk
 from functools import partial
 from config_generator import ConfigGenerator
 from threading import Thread
+from additional_info_gui import AdditionalInfoGUI
 
 
 class AnimeWatchListGUI:
@@ -102,10 +103,9 @@ class AnimeWatchListGUI:
             element = {}
             grid_config = {'pady': pady, 'row': i}
             image = self.get_image_data(c['image']['raw_data'], img_width, img_height)
-            img_label = tk.Label(scrollable_frame, image=image)
-            img_label.image = image
-            img_label.grid(**grid_config, padx=padx, column=0)
-            element['img_label'] = img_label
+            img_button = tk.Button(scrollable_frame, image=image, border=0, command=partial(self.on_image_button, i))
+            img_button.grid(**grid_config, padx=padx, column=0)
+            element['img_button'] = img_button
             element['img_width'] = img_width
             element['img_height'] = img_height
 
@@ -135,8 +135,8 @@ class AnimeWatchListGUI:
             elements.append(element)
 
         self.canvas.update_idletasks()
-        row_height = max(img_label.winfo_height(), title_button.winfo_height(), ep_button.winfo_height(), watch_button.winfo_height()) + pady * 2
-        row_width = img_label.winfo_width() + title_button.winfo_width() + ep_button.winfo_width() + watch_button.winfo_width() + padx * 4
+        row_height = max(img_button.winfo_height(), title_button.winfo_height(), ep_button.winfo_height(), watch_button.winfo_height()) + pady * 2
+        row_width = img_button.winfo_width() + title_button.winfo_width() + ep_button.winfo_width() + watch_button.winfo_width() + padx * 4
         self.canvas.config(width=row_width, height=row_height * min(max_row_count, len(config)), yscrollincrement=row_height)
         return elements
 
@@ -149,8 +149,8 @@ class AnimeWatchListGUI:
             e = elements[i]
 
             image = self.get_image_data(c['image']['raw_data'], e['img_width'], e['img_height'])
-            e['img_label'].config(image=image)
-            e['img_label'].image = image
+            e['img_button'].config(image=image)
+            e['img_button'].image = image
 
             e['title_button'].config(text=self.trim_text(c['title'], e['title_width']), command=partial(self.on_open_page, i, c['myanimelist_url']))
 
@@ -160,21 +160,9 @@ class AnimeWatchListGUI:
             e['watch_button'].config(state=state, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
 
     def get_image_data(self, image_raw_data, width, height):
-        if image_raw_data:
-            img = Image.open(io.BytesIO(image_raw_data))
-        else:
-            img = Image.open(self.resource_path(os.path.join('images', 'image-not-found.png')))
+        img = Image.open(io.BytesIO(image_raw_data))
         img = img.resize((width,height), Image.ANTIALIAS)
         return ImageTk.PhotoImage(img)
-
-    def resource_path(self, relative_path):
-        try:
-            # PyInstaller creates a temp folder and stores path in _MEIPASS
-            base_path = sys._MEIPASS
-        except Exception:
-            base_path = os.path.abspath(".")
-
-        return os.path.join(base_path, relative_path)
 
     def is_valid_url(self, text):
         if text.startswith('http://') or text.startswith('https://') and len(text) >= 12:
@@ -264,6 +252,9 @@ class AnimeWatchListGUI:
         self.elements[index]['title_button']['bg'] = color
         self.elements[index]['ep_button']['bg'] = color
         self.elements[index]['marked_for_deletion'] = not self.elements[index]['marked_for_deletion']
+
+    def on_image_button(self, index):
+        AdditionalInfoGUI(self.config[index]['title'], self.config[index]['image']['raw_data'])
 
     def mainloop(self):
         tk.mainloop()
