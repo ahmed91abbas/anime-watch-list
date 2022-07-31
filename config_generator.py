@@ -1,10 +1,13 @@
 import os
 import re
+import sys
 import requests
 from threading import Thread
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
-from urllib.parse import urlsplit,urlunsplit, quote
+from urllib.parse import urlsplit, urlunsplit, quote
+from pytz import timezone
+from datetime import datetime
 
 
 class ConfigGenerator:
@@ -17,7 +20,7 @@ class ConfigGenerator:
             'ep': '-1',
             'image': {
                 'url': '',
-                'raw_data': None
+                'raw_data': self.get_image_data(None)
             }
         }
         self.url_category_reg = '^https://.*.?gogoanime.[a-z]+/(category/)'
@@ -83,7 +86,7 @@ class ConfigGenerator:
         next_ep_div_a = soup.find('div', {'class': 'anime_video_body_episodes_r'}).a
         if next_ep_div_a:
             next_ep_url = os.path.dirname(url) + next_ep_div_a['href']
-        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': { 'url': cover_url }}
+        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
 
     def get_category_page_info(self, url):
         response = requests.get(url, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
@@ -97,7 +100,7 @@ class ConfigGenerator:
             next_ep_url = self.update_url_episode_number(url, '1')
         else:
             title = f'[Not yet aired] {title}'
-        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': { 'url': cover_url }}
+        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
 
     def update_url_episode_number(self, url, ep):
         if not re.match('^\d+$', ep):
@@ -119,13 +122,17 @@ class ConfigGenerator:
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
 
     def get_image_data(self, url):
-        try:
-            encoded_url = self.encode_url(url)
-            req = Request(encoded_url, headers={'User-Agent': 'Mozilla/5.0'})
-            raw_data = urlopen(req).read()
-            return raw_data
-        except:
-            return None
+        if url:
+            try:
+                encoded_url = self.encode_url(url)
+                req = Request(encoded_url, headers={'User-Agent': 'Mozilla/5.0'})
+                raw_data = urlopen(req).read()
+                return raw_data
+            except:
+                pass
+        with open(self.resource_path(os.path.join('images', 'image-not-found.png')), 'rb') as f:
+            raw_data = f.read()
+        return raw_data
 
     def encode_url(self, url):
         protocol, domain, path, query, fragment = urlsplit(url)
@@ -134,6 +141,65 @@ class ConfigGenerator:
 
     def get_skeleton_config(self):
         return [self.base_info]*len(self.get_urls())
+
+    def convert_time_timezone(self, time, tz1, tz2):
+        time = datetime.strptime(time, '%H:%M').time()
+        dt = datetime.combine(datetime.now(), time)
+        tz1 = timezone(tz1)
+        tz2 = timezone(tz2)
+        return tz1.localize(dt).astimezone(tz2).strftime("%H:%M")
+
+    def get_additional_info(self, title):
+        url = "https://api.jikan.moe/v4/anime"
+        params = {
+            'q': title,
+            'limit': '5'
+        }
+        response = requests.request("GET", url, params=params)
+        response = response.json()
+        if not 'data' in response:
+            return self.get_skeleton_additional_info()
+        for item in response['data']:
+            for title_object in item['titles']:
+                if title == title_object['title']:
+                    current_zone = 'Europe/Stockholm'
+                    if item["broadcast"]["day"]:
+                        time = self.convert_time_timezone(item['broadcast']['time'], item['broadcast']['timezone'], current_zone)
+                        broadcast = f'{item["broadcast"]["day"]} at {time} ({current_zone})'
+                    else:
+                        broadcast = '-'
+                    return {
+                        'url': item['url'],
+                        'source': item['source'],
+                        'status': item['status'],
+                        'episodes': item['episodes'],
+                        'aired': item['aired']['string'],
+                        'score': item['score'],
+                        'season': item['season'],
+                        'broadcast': broadcast,
+                    }
+        return self.get_skeleton_additional_info()
+
+    def get_skeleton_additional_info(self):
+        return {
+                'url': '-',
+                'source': '-',
+                'status': '-',
+                'episodes': '-',
+                'aired': '-',
+                'score': '-',
+                'season': '-',
+                'broadcast': '-',
+            }
+
+    def resource_path(self, relative_path):
+        try:
+            # PyInstaller creates a temp folder and stores path in _MEIPASS
+            base_path = sys._MEIPASS
+        except Exception:
+            base_path = os.path.abspath(".")
+
+        return os.path.join(base_path, relative_path)
 
     def get_config(self):
         self.config = []
