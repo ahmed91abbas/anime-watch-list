@@ -1,6 +1,7 @@
 import sys
 import os
 import io
+import base64
 import subprocess
 import webbrowser
 import tkinter as tk
@@ -102,7 +103,7 @@ class AnimeWatchListGUI:
         for i, c in enumerate(config):
             element = {}
             grid_config = {'pady': pady, 'row': i}
-            image = self.get_image_data(c['image']['raw_data'], img_width, img_height)
+            image = self.get_image_data(c['image']['base64_data'], img_width, img_height)
             img_button = tk.Button(scrollable_frame, image=image, border=0, command=partial(self.on_image_button, i))
             img_button.image = image
             img_button.grid(**grid_config, padx=padx, column=0)
@@ -149,7 +150,7 @@ class AnimeWatchListGUI:
             c = config[i]
             e = elements[i]
 
-            image = self.get_image_data(c['image']['raw_data'], e['img_width'], e['img_height'])
+            image = self.get_image_data(c['image']['base64_data'], e['img_width'], e['img_height'])
             e['img_button'].config(image=image)
             e['img_button'].image = image
 
@@ -160,7 +161,8 @@ class AnimeWatchListGUI:
             state = ('disabled', 'normal')[bool(c['next_ep_url'])]
             e['watch_button'].config(state=state, command=partial(self.on_open_page, i, c['next_ep_url'], update_config=True, close=True))
 
-    def get_image_data(self, image_raw_data, width, height):
+    def get_image_data(self, image_base64_data, width, height):
+        image_raw_data = base64.b64decode(image_base64_data)
         img = Image.open(io.BytesIO(image_raw_data))
         img = img.resize((width,height), Image.ANTIALIAS)
         return ImageTk.PhotoImage(img)
@@ -255,7 +257,7 @@ class AnimeWatchListGUI:
         self.elements[index]['marked_for_deletion'] = not self.elements[index]['marked_for_deletion']
 
     def on_image_button(self, index):
-        AdditionalInfoGUI(self.config[index]['title'], self.config[index]['image']['raw_data'])
+        AdditionalInfoGUI(self.config[index]['title'], self.config[index]['image']['base64_data'])
 
     def mainloop(self):
         tk.mainloop()

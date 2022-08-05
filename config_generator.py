@@ -1,6 +1,8 @@
 import os
 import re
 import sys
+import json
+import base64
 import requests
 from threading import Thread
 from bs4 import BeautifulSoup
@@ -11,7 +13,7 @@ from datetime import datetime
 
 
 class ConfigGenerator:
-    def __init__(self, config_filename='config.txt'):
+    def __init__(self, config_filename='config.txt', cache_filename='cache.json'):
         self.base_info = {
             'title': 'Loading...',
             'current_ep_url': '',
@@ -20,13 +22,25 @@ class ConfigGenerator:
             'ep': '-1',
             'image': {
                 'url': '',
-                'raw_data': self.get_image_data(None)
+                'base64_data': self.get_image_base64_data(None)
             }
         }
         self.url_category_reg = '^https://.*.?gogoanime.[a-z]+/(category/)'
         self.url_reg = '^https://.*.?gogoanime.[a-z]+/.*-episode-(\d+(-\d+)?)$'
         self.config_filename = config_filename
+        self.cache_filename = cache_filename
         self.config = []
+
+    def read_json(self, path):
+        try:
+            with open(path, 'r') as f:
+                return json.load(f)
+        except:
+            return dict()
+
+    def write_json(self, path, data):
+        with open(path, 'w') as f:
+            json.dump(data, f, indent=4)
 
     def get_config_filename(self):
         return self.config_filename
@@ -46,11 +60,25 @@ class ConfigGenerator:
             return [line.rstrip() for line in f.readlines()]
 
     def get_details(self, url):
-        result = self.get_info_from_url(url)
-        for key in result:
-            if key.endswith('_url'):
-                result[key] = result[key].replace(' ', '%20')
+        try:
+            result = self.get_info_from_cache(url)
+        except:
+            result = self.get_info_from_url(url)
         self.config.append(result)
+
+    def get_info_from_cache(self, url):
+        cache = self.cache[url]
+        return {
+            'title': cache['title'],
+            'current_ep_url': cache['current_ep_url'],
+            'next_ep_url': cache['next_ep_url'],
+            'myanimelist_url': cache['myanimelist_url'],
+            'ep': cache['ep'],
+            'image': {
+                'url': cache['image']['url'],
+                'base64_data': cache['image']['base64_data']
+            }
+        }
 
     def get_info_from_url(self, url):
         category_match = re.match(self.url_category_reg, url)
@@ -70,7 +98,7 @@ class ConfigGenerator:
             result = self.get_unsupported_url_info(url)
 
         result['current_ep_url'] = url
-        result['image']['raw_data'] = self.get_image_data(result['image']['url'])
+        result['image']['base64_data'] = self.get_image_base64_data(result['image']['url'])
         return result
 
     def get_unsupported_url_info(self, url, warning_message='UNSUPPORTED URL'):
@@ -121,18 +149,19 @@ class ConfigGenerator:
     def build_myanimelist_url(self, title):
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
 
-    def get_image_data(self, url):
+    def get_image_base64_data(self, url):
+        raw_data = ''
         if url:
             try:
                 encoded_url = self.encode_url(url)
                 req = Request(encoded_url, headers={'User-Agent': 'Mozilla/5.0'})
                 raw_data = urlopen(req).read()
-                return raw_data
             except:
                 pass
-        with open(self.resource_path(os.path.join('images', 'image-not-found.png')), 'rb') as f:
-            raw_data = f.read()
-        return raw_data
+        else:
+            with open(self.resource_path(os.path.join('images', 'image-not-found.png')), 'rb') as f:
+                raw_data = f.read()
+        return base64.b64encode(raw_data).decode('utf-8')
 
     def encode_url(self, url):
         protocol, domain, path, query, fragment = urlsplit(url)
@@ -201,7 +230,15 @@ class ConfigGenerator:
 
         return os.path.join(base_path, relative_path)
 
+    def save_cache(self):
+        result = {e['current_ep_url']: e for e in self.config if e['next_ep_url']}
+        self.write_json(self.cache_filename, result)
+
+    def get_cache(self):
+        return self.read_json(self.cache_filename)
+
     def get_config(self):
+        self.cache = self.get_cache()
         self.config = []
         threads = []
         for url in self.get_urls():
@@ -210,4 +247,6 @@ class ConfigGenerator:
             threads.append(t)
         for thread in threads:
             thread.join()
+
+        self.save_cache()
         return self.config

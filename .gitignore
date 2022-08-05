@@ -4,3 +4,4 @@ dist
 build
 anime_watch_list.spec
 .vscode
+cache.json
