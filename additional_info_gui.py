@@ -1,4 +1,5 @@
 import io
+import base64
 import webbrowser
 import tkinter as tk
 from PIL import Image, ImageTk
@@ -6,9 +7,10 @@ from threading import Thread
 from config_generator import ConfigGenerator
 
 class AdditionalInfoGUI():
-    def __init__(self, title, raw_image_data):
+    def __init__(self, title, base64_image_data):
         self.generator = ConfigGenerator()
         self.title = title
+        raw_image_data = base64.b64decode(base64_image_data)
         labels = self.create_gui(raw_image_data)
         Thread(target=self.update_gui, args=(labels, )).start()
         self.mainloop()
