@@ -199,6 +199,7 @@ class ConfigGenerator:
                         broadcast = '-'
                     return {
                         'url': item['url'],
+                        'title': item['title_english'],
                         'source': item['source'],
                         'status': item['status'],
                         'episodes': item['episodes'],
@@ -212,6 +213,7 @@ class ConfigGenerator:
     def get_skeleton_additional_info(self):
         return {
                 'url': '-',
+                'title': '-',
                 'source': '-',
                 'status': '-',
                 'episodes': '-',
