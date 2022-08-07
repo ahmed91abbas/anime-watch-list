@@ -187,7 +187,7 @@ class ConfigGenerator:
         response = requests.request("GET", url, params=params)
         response = response.json()
         if not 'data' in response:
-            return self.get_skeleton_additional_info()
+            return {}
         for item in response['data']:
             for title_object in item['titles']:
                 if title == title_object['title']:
@@ -199,7 +199,7 @@ class ConfigGenerator:
                         broadcast = '-'
                     return {
                         'url': item['url'],
-                        'title': item['title_english'],
+                        'title_english': item['title_english'],
                         'source': item['source'],
                         'status': item['status'],
                         'episodes': item['episodes'],
@@ -207,21 +207,9 @@ class ConfigGenerator:
                         'score': item['score'],
                         'season': item['season'],
                         'broadcast': broadcast,
+                        'synopsis': item['synopsis'],
                     }
-        return self.get_skeleton_additional_info()
-
-    def get_skeleton_additional_info(self):
-        return {
-                'url': '-',
-                'title': '-',
-                'source': '-',
-                'status': '-',
-                'episodes': '-',
-                'aired': '-',
-                'score': '-',
-                'season': '-',
-                'broadcast': '-',
-            }
+        return {}
 
     def resource_path(self, relative_path):
         try:
