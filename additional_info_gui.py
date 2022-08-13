@@ -19,6 +19,7 @@ class AdditionalInfoGUI():
             'Aired',
             'Score',
             'Season',
+            'Genres',
             'Broadcast',
         ]
         self.create_gui(raw_image_data)

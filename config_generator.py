@@ -171,12 +171,20 @@ class ConfigGenerator:
     def get_skeleton_config(self):
         return [self.base_info]*len(self.get_urls())
 
-    def convert_time_timezone(self, time, tz1, tz2):
+    def convert_time_timezone(self, day, time, tz1, tz2):
+        days = ['Mondays', 'Tuesdays', 'Wednesdays', 'Thursdays', 'Fridays', 'Saturdays', 'Sundays']
         time = datetime.strptime(time, '%H:%M').time()
         dt = datetime.combine(datetime.now(), time)
         tz1 = timezone(tz1)
         tz2 = timezone(tz2)
-        return tz1.localize(dt).astimezone(tz2).strftime("%H:%M")
+        converted_date = tz1.localize(dt).astimezone(tz2)
+        day_diff = int(dt.strftime("%d")) - int(converted_date.strftime("%d"))
+        converted_time = converted_date.strftime("%H:%M")
+        if day_diff == 0:
+            return day, converted_time
+        if day_diff > 0 or day_diff <= -29:
+            return days[days.index(day) - 1], converted_time
+        return days[(days.index(day) + 1)%len(days)], converted_time
 
     def get_additional_info(self, title):
         url = "https://api.jikan.moe/v4/anime"
@@ -191,25 +199,35 @@ class ConfigGenerator:
         for item in response['data']:
             for title_object in item['titles']:
                 if title == title_object['title']:
-                    current_zone = 'Europe/Stockholm'
-                    if item["broadcast"]["day"]:
-                        time = self.convert_time_timezone(item['broadcast']['time'], item['broadcast']['timezone'], current_zone)
-                        broadcast = f'{item["broadcast"]["day"]} at {time} ({current_zone})'
-                    else:
-                        broadcast = '-'
-                    return {
-                        'url': item['url'],
-                        'title_english': item['title_english'],
-                        'source': item['source'],
-                        'status': item['status'],
-                        'episodes': item['episodes'],
-                        'aired': item['aired']['string'],
-                        'score': item['score'],
-                        'season': item['season'],
-                        'broadcast': broadcast,
-                        'synopsis': item['synopsis'],
-                    }
+                    return self.map_myanimelist_response(item)
         return {}
+
+    def map_myanimelist_response(self, response):
+        current_zone = 'Europe/Stockholm'
+        if response["broadcast"]["day"]:
+            day, time = self.convert_time_timezone(
+                response["broadcast"]["day"],
+                response['broadcast']['time'],
+                response['broadcast']['timezone'],
+                current_zone
+            )
+            broadcast = f'{day} at {time} ({current_zone})'
+        else:
+            broadcast = '-'
+        genres = [genre['name'] for genre in response['genres']]
+        return {
+            'url': response['url'],
+            'title_english': response['title_english'],
+            'source': response['source'],
+            'status': response['status'],
+            'episodes': response['episodes'],
+            'aired': response['aired']['string'],
+            'score': response['score'],
+            'season': response['season'],
+            'broadcast': broadcast,
+            'genres': ', '.join(genres),
+            'synopsis': response['synopsis'],
+        }
 
     def resource_path(self, relative_path):
         try:
@@ -240,3 +258,8 @@ class ConfigGenerator:
 
         self.save_cache()
         return self.config
+
+
+if __name__ == '__main__':
+    gen = ConfigGenerator()
+    print(gen.convert_time_timezone('Sundays', '00:55', 'Asia/Tokyo', 'Europe/Stockholm'))
