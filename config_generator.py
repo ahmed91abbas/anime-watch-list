@@ -214,20 +214,23 @@ class ConfigGenerator:
             broadcast = f'{day} at {time} ({current_zone})'
         else:
             broadcast = '-'
-        genres = [genre['name'] for genre in response['genres']]
+        genres = [self.stringify(genre['name']) for genre in response['genres']]
         return {
-            'url': response['url'],
-            'title_english': response['title_english'],
-            'source': response['source'],
-            'status': response['status'],
-            'episodes': response['episodes'],
-            'aired': response['aired']['string'],
-            'score': response['score'],
-            'season': response['season'],
-            'broadcast': broadcast,
+            'url': self.stringify(response['url']),
+            'title_english': self.stringify(response['title_english']),
+            'source': self.stringify(response['source']),
+            'status': self.stringify(response['status']),
+            'episodes': self.stringify(response['episodes']),
+            'aired': self.stringify(response['aired']['string']),
+            'score': self.stringify(response['score']),
+            'season': self.stringify(response['season']),
+            'broadcast': self.stringify(broadcast),
             'genres': ', '.join(genres),
-            'synopsis': response['synopsis'],
+            'synopsis': self.stringify(response['synopsis']),
         }
+
+    def stringify(self, value):
+        return str(value).capitalize() if value else '-'
 
     def resource_path(self, relative_path):
         try:
