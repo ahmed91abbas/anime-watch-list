@@ -28,7 +28,7 @@ class AnimeWatchListGUI:
         self.update_gui(self.config, elements)
 
     def sort_config(self, config):
-        config = sorted(config, key=lambda x: x['title'])
+        config = sorted(config, key=lambda x: f"{x['status']} {x['title']}")
         l1 = sorted(filter(lambda x: x['next_ep_url'], config), key=lambda x: float(x['ep'].replace('-', '.')), reverse=True)
         l2 = list(filter(lambda x: not x['next_ep_url'], config))
         return l1 + l2
@@ -153,8 +153,8 @@ class AnimeWatchListGUI:
             image = self.get_image_data(c['image']['base64_data'], e['img_width'], e['img_height'])
             e['img_button'].config(image=image)
             e['img_button'].image = image
-
-            e['title_button'].config(text=self.trim_text(c['title'], e['title_width']), command=partial(self.on_open_page, i, c['myanimelist_url']))
+            title = f"[{c['status']}] {c['title']}" if c['status'] else c['title']
+            e['title_button'].config(text=self.trim_text(title, e['title_width']), command=partial(self.on_open_page, i, c['myanimelist_url']))
 
             e['ep_button'].config(text=f'#{c["ep"]}', command=partial(self.on_open_page, i, c['current_ep_url'], close=True))
 

@@ -16,6 +16,7 @@ class ConfigGenerator:
     def __init__(self, config_filename='config.txt', cache_filename='cache.json'):
         self.base_info = {
             'title': 'Loading...',
+            'status': '',
             'current_ep_url': '',
             'next_ep_url': '',
             'myanimelist_url': '',
@@ -70,6 +71,7 @@ class ConfigGenerator:
         cache = self.cache[url]
         return {
             'title': cache['title'],
+            'status': cache['status'],
             'current_ep_url': cache['current_ep_url'],
             'next_ep_url': cache['next_ep_url'],
             'myanimelist_url': cache['myanimelist_url'],
@@ -92,7 +94,7 @@ class ConfigGenerator:
                 result = self.get_episode_page_info(url)
                 result['ep'] = episode_match.group(1)
         except:
-            result = self.get_unsupported_url_info(url, warning_message='Failed')
+            result = self.get_unsupported_url_info(url, status='Failed')
 
         if not result:
             result = self.get_unsupported_url_info(url)
@@ -101,8 +103,8 @@ class ConfigGenerator:
         result['image']['base64_data'] = self.get_image_base64_data(result['image']['url'])
         return result
 
-    def get_unsupported_url_info(self, url, warning_message='UNSUPPORTED URL'):
-        return {**self.base_info, 'title': f'[{warning_message}] {url}'}
+    def get_unsupported_url_info(self, url, status='UNSUPPORTED URL'):
+        return {**self.base_info, 'title': url, 'status': status}
 
     def get_episode_page_info(self, url):
         response = requests.get(url, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
@@ -114,7 +116,7 @@ class ConfigGenerator:
         next_ep_div_a = soup.find('div', {'class': 'anime_video_body_episodes_r'}).a
         if next_ep_div_a:
             next_ep_url = os.path.dirname(url) + next_ep_div_a['href']
-        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
+        return {'title': title, 'status': '', 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
 
     def get_category_page_info(self, url):
         response = requests.get(url, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
@@ -124,11 +126,12 @@ class ConfigGenerator:
         myanimelist_url = self.build_myanimelist_url(title)
         ep_end = soup.find('div', {'class': 'anime_video_body'}).a.get('ep_end')
         next_ep_url = ''
+        status = ''
         if float(ep_end) > 0:
             next_ep_url = self.update_url_episode_number(url, '1')
         else:
-            title = f'[Not yet aired] {title}'
-        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
+            status = 'Not yet aired'
+        return {'title': title, 'status': status,'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
 
     def update_url_episode_number(self, url, ep):
         if not re.match('^\d+$', ep):
