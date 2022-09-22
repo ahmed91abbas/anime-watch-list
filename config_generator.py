@@ -4,6 +4,7 @@ import sys
 import json
 import base64
 import requests
+import time
 from threading import Thread
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
@@ -14,6 +15,12 @@ from datetime import datetime
 
 class ConfigGenerator:
     def __init__(self, config_filename='config.txt', cache_filename='cache.json'):
+        self.STATUSES = {
+            'default': '',
+            'not_aired': 'Not yet aired',
+            'unsupported_url': 'UNSUPPORTED URL',
+            'failed': 'Failed'
+        }
         self.base_info = {
             'title': 'Loading...',
             'status': '',
@@ -21,6 +28,7 @@ class ConfigGenerator:
             'next_ep_url': '',
             'myanimelist_url': '',
             'ep': '-1',
+            'loaded_from_cache': False,
             'image': {
                 'url': '',
                 'base64_data': self.get_image_base64_data(None)
@@ -69,18 +77,20 @@ class ConfigGenerator:
 
     def get_info_from_cache(self, url):
         cache = self.cache[url]
-        return {
+        info = {
             'title': cache['title'],
             'status': cache['status'],
             'current_ep_url': cache['current_ep_url'],
             'next_ep_url': cache['next_ep_url'],
             'myanimelist_url': cache['myanimelist_url'],
             'ep': cache['ep'],
+            'loaded_from_cache': True,
             'image': {
                 'url': cache['image']['url'],
                 'base64_data': cache['image']['base64_data']
             }
         }
+        return {**self.base_info, **info}
 
     def get_info_from_url(self, url):
         category_match = re.match(self.url_category_reg, url)
@@ -94,16 +104,16 @@ class ConfigGenerator:
                 result = self.get_episode_page_info(url)
                 result['ep'] = episode_match.group(1)
         except:
-            result = self.get_unsupported_url_info(url, status='Failed')
+            result = self.get_unsupported_url_info(url, self.STATUSES['failed'])
 
         if not result:
-            result = self.get_unsupported_url_info(url)
+            result = self.get_unsupported_url_info(url, self.STATUSES['unsupported_url'])
 
         result['current_ep_url'] = url
         result['image']['base64_data'] = self.get_image_base64_data(result['image']['url'])
-        return result
+        return {**self.base_info, **result}
 
-    def get_unsupported_url_info(self, url, status='UNSUPPORTED URL'):
+    def get_unsupported_url_info(self, url, status):
         return {**self.base_info, 'title': url, 'status': status}
 
     def get_episode_page_info(self, url):
@@ -116,7 +126,7 @@ class ConfigGenerator:
         next_ep_div_a = soup.find('div', {'class': 'anime_video_body_episodes_r'}).a
         if next_ep_div_a:
             next_ep_url = os.path.dirname(url) + next_ep_div_a['href']
-        return {'title': title, 'status': '', 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
+        return {'title': title, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
 
     def get_category_page_info(self, url):
         response = requests.get(url, allow_redirects=True, headers={'User-Agent': 'Mozilla/5.0'})
@@ -126,12 +136,12 @@ class ConfigGenerator:
         myanimelist_url = self.build_myanimelist_url(title)
         ep_end = soup.find('div', {'class': 'anime_video_body'}).a.get('ep_end')
         next_ep_url = ''
-        status = ''
+        status = self.STATUSES['default']
         if float(ep_end) > 0:
             next_ep_url = self.update_url_episode_number(url, '1')
         else:
-            status = 'Not yet aired'
-        return {'title': title, 'status': status,'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
+            status = self.STATUSES['not_aired']
+        return {'title': title, 'status': status, 'next_ep_url': next_ep_url, 'myanimelist_url': myanimelist_url, 'image': {'url': cover_url}}
 
     def update_url_episode_number(self, url, ep):
         if not re.match('^\d+$', ep):
@@ -256,6 +266,7 @@ class ConfigGenerator:
             os.remove(self.cache_filename)
 
     def get_config(self):
+        start_time = time.time()
         self.cache = self.get_cache()
         self.config = []
         threads = []
@@ -267,9 +278,36 @@ class ConfigGenerator:
             thread.join()
 
         self.save_cache()
+        self.config_load_time = time.time() - start_time
         return self.config
+
+    def get_stats(self):
+        stats = {
+            'total': 0,
+            'cached': 0,
+            'not_aired': 0,
+            'not_started': 0,
+            'failed': 0,
+            'without_next_episode': 0,
+            'config_load_time': 'N/A'
+        }
+        if not self.config:
+            return stats
+        stats['total'] = len(self.config)
+        stats['config_load_time'] = f'{self.config_load_time: .3f}s' if self.config_load_time else 'N/A'
+        for c in self.config:
+            if c['loaded_from_cache']:
+                stats['cached'] += 1
+            if c['status'] == self.STATUSES['not_aired']:
+                stats['not_aired'] += 1
+            if c['ep'] == '0':
+                stats['not_started'] += 1
+            if c['status'] == self.STATUSES['failed'] or c['status'] == self.STATUSES['unsupported_url']:
+                stats['failed'] += 1
+            if c['status'] == self.STATUSES['default'] and not c['next_ep_url']:
+                stats['without_next_episode'] += 1
+        return stats
 
 
 if __name__ == '__main__':
     gen = ConfigGenerator()
-    print(gen.convert_time_timezone('Sundays', '00:55', 'Asia/Tokyo', 'Europe/Stockholm'))

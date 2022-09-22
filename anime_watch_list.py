@@ -5,6 +5,7 @@ import base64
 import subprocess
 import webbrowser
 import tkinter as tk
+from tkinter import messagebox
 from PIL import Image, ImageTk
 from functools import partial
 from config_generator import ConfigGenerator
@@ -53,6 +54,7 @@ class AnimeWatchListGUI:
         options_menu.add_command(label="Edit", command=self.on_edit)
         options_menu.add_command(label="Reload", command=self.on_reload)
         options_menu.add_command(label="Remove cache", command=self.on_remove_cache)
+        options_menu.add_command(label="Show stats", command=self.on_stats)
         options_menu.add_command(label="Edit the config file", command=self.on_edit_config)
         options_menu.add_command(label="Open in Github", command=partial(self.on_open_page, 0, 'https://github.com/ahmed91abbas/anime-watch-list'))
 
@@ -218,6 +220,11 @@ class AnimeWatchListGUI:
     def on_reload(self):
         self.on_close()
         self.run()
+
+    def on_stats(self):
+        stats = self.generator.get_stats()
+        stats = '\n'.join([f'{k.capitalize().replace("_", " ")}: {v}' for k, v in stats.items()])
+        messagebox.showinfo("Stats", stats)
 
     def on_remove_cache(self):
         self.generator.remove_cache()
