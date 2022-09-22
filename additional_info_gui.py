@@ -33,6 +33,7 @@ class AdditionalInfoGUI():
         self.top.title("Additional information")
         self.top.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.top.resizable(False, False)
+        self.top.focus()
 
         header_frame = tk.Frame(self.top, bg=bg_color)
         body_frame = tk.Frame(self.top, bg=bg_color)

@@ -222,7 +222,8 @@ class AnimeWatchListGUI:
         self.root.destroy()
 
     def on_mousewheel(self, event):
-        self.canvas.yview_scroll(-1*(event.delta//120), "units")
+        if str(self.root.focus_get()) == '.':
+            self.canvas.yview_scroll(-1*(event.delta//120), "units")
 
     def on_open_page(self, index, url, update_config=False, close=False):
         if update_config:
