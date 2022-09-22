@@ -52,6 +52,7 @@ class AnimeWatchListGUI:
         options_menu.add_command(label="Add to list", command=self.on_add)
         options_menu.add_command(label="Edit", command=self.on_edit)
         options_menu.add_command(label="Reload", command=self.on_reload)
+        options_menu.add_command(label="Remove cache", command=self.on_remove_cache)
         options_menu.add_command(label="Edit the config file", command=self.on_edit_config)
         options_menu.add_command(label="Open in Github", command=partial(self.on_open_page, 0, 'https://github.com/ahmed91abbas/anime-watch-list'))
 
@@ -217,6 +218,9 @@ class AnimeWatchListGUI:
     def on_reload(self):
         self.on_close()
         self.run()
+
+    def on_remove_cache(self):
+        self.generator.remove_cache()
 
     def on_close(self):
         self.root.destroy()

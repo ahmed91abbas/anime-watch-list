@@ -251,6 +251,10 @@ class ConfigGenerator:
     def get_cache(self):
         return self.read_json(self.cache_filename)
 
+    def remove_cache(self):
+        if os.path.exists(self.cache_filename):
+            os.remove(self.cache_filename)
+
     def get_config(self):
         self.cache = self.get_cache()
         self.config = []
