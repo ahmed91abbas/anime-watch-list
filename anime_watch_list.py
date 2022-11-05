@@ -31,6 +31,7 @@ class AnimeWatchListGUI:
     def sort_config(self, config):
         config = sorted(config, key=lambda x: f"{x['status']} {x['title']}")
         l1 = sorted(filter(lambda x: x['next_ep_url'], config), key=lambda x: float(x['ep'].replace('-', '.')), reverse=True)
+        l1 = sorted(l1, key=lambda x: x['weight'], reverse=True)
         l2 = list(filter(lambda x: not x['next_ep_url'], config))
         return l1 + l2
 

@@ -29,6 +29,7 @@ class ConfigGenerator:
             'myanimelist_url': '',
             'ep': '-1',
             'loaded_from_cache': False,
+            'weight': 0,
             'image': {
                 'url': '',
                 'base64_data': self.get_image_base64_data(None)
@@ -111,6 +112,8 @@ class ConfigGenerator:
 
         result['current_ep_url'] = url
         result['image']['base64_data'] = self.get_image_base64_data(result['image']['url'])
+        if result['next_ep_url']:
+            result['weight'] = 1
         return {**self.base_info, **result}
 
     def get_unsupported_url_info(self, url, status):
