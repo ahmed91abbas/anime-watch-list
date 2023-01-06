@@ -209,6 +209,9 @@ class ConfigGenerator:
         return days[(days.index(day) + 1) % len(days)], converted_time
 
     def get_additional_info(self, title):
+        m = re.match(r".* (\(.*\))", title)
+        if m:
+            title = title.replace(m.group(1), "").rstrip()
         url = "https://api.jikan.moe/v4/anime"
         params = {"q": title, "limit": "5"}
         response = requests.request("GET", url, params=params)
