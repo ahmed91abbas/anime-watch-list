@@ -33,13 +33,10 @@ def clean_up():
         remove_dir(dir_)
 
 
-def call_process(root_path):
-    site_packages = path_join([root_path, "env", "Lib", "site-packages"])
+def call_process():
     params = [
         "pyinstaller",
         "--noconsole",
-        "--paths",
-        site_packages,
         "--hidden-import",
         "six",
         "--add-data",
@@ -52,9 +49,8 @@ def call_process(root_path):
 
 
 if __name__ == "__main__":
-    root_path = os.path.dirname(os.path.realpath(__file__))
     print("Cleaning up old files...\n")
     clean_up()
     print("\nCreating the exe...\n")
-    call_process(root_path)
+    call_process()
     print("\nDone.")
