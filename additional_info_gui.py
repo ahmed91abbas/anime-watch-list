@@ -1,5 +1,6 @@
 import base64
 import io
+import os
 import tkinter as tk
 import webbrowser
 from threading import Thread
@@ -37,6 +38,8 @@ class AdditionalInfoGUI:
         self.top.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.top.resizable(False, False)
         self.top.focus()
+        icon_img = ImageTk.PhotoImage(file=os.path.join("images", "icon.ico"))
+        self.top.tk.call("wm", "iconphoto", self.top._w, icon_img)
 
         header_frame = tk.Frame(self.top, bg=bg_color)
         body_frame = tk.Frame(self.top, bg=bg_color)

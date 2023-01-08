@@ -36,11 +36,13 @@ def clean_up():
 def call_process():
     params = [
         "pyinstaller",
+        "--icon",
+        os.path.join("images", "icon.ico"),
         "--noconsole",
         "--hidden-import",
         "six",
         "--add-data",
-        "images/image-not-found.png;images",
+        "images/*;images",
         "--add-data",
         "config.txt;.",
         "anime_watch_list.py",

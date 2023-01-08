@@ -50,6 +50,8 @@ class AnimeWatchListGUI:
         self.root.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.resizable(False, False)
         self.root.geometry("+400+250")
+        icon_img = ImageTk.PhotoImage(file=os.path.join("images", "icon.ico"))
+        self.root.tk.call("wm", "iconphoto", self.root._w, icon_img)
 
         menu = tk.Menu(self.root)
         self.root.config(menu=menu)
@@ -133,7 +135,10 @@ class AnimeWatchListGUI:
             element["img_height"] = img_height
 
             title_button = tk.Button(
-                scrollable_frame, text=self.trim_text(c["title"], title_width), **component_config, width=title_width
+                scrollable_frame,
+                text=self.trim_text(c["title"], title_width),
+                **component_config,
+                width=title_width,
             )
             title_button.grid(**grid_config, column=1)
             element["title_button"] = title_button
