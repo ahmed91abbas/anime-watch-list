@@ -8,10 +8,13 @@ from threading import Thread
 from PIL import Image, ImageTk
 
 from config_generator import ConfigGenerator
+from gui_utils import GuiUtils
 
 
-class AdditionalInfoGUI:
+class AdditionalInfoGUI(GuiUtils):
     def __init__(self, title, base64_image_data):
+        setting_filepath = os.path.join("configs", os.path.basename(__file__).replace(".py", ".json"))
+        super().__init__(setting_filepath)
         self.generator = ConfigGenerator()
         self.title = title
         raw_image_data = base64.b64decode(base64_image_data)
@@ -34,6 +37,7 @@ class AdditionalInfoGUI:
         bg_color = "#e6e6ff"
         title_font = ("calibri", 16)
         self.top = tk.Toplevel(bg=bg_color)
+        self.top.geometry(self.get_geometry())
         self.top.title("Additional information")
         self.top.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.top.resizable(False, False)
@@ -111,6 +115,9 @@ class AdditionalInfoGUI:
         return ImageTk.PhotoImage(img)
 
     def on_close(self):
+        geometry = self.top.geometry()
+        self.settings["geometry"] = geometry[geometry.index("+") :]
+        self.save_settings()
         self.top.destroy()
 
     def trim_text(self, text, max_length):

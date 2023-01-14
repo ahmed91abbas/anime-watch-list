@@ -13,10 +13,13 @@ from PIL import Image, ImageTk
 
 from additional_info_gui import AdditionalInfoGUI
 from config_generator import ConfigGenerator
+from gui_utils import GuiUtils
 
 
-class AnimeWatchListGUI:
+class AnimeWatchListGUI(GuiUtils):
     def __init__(self):
+        setting_filepath = os.path.join("configs", os.path.basename(__file__).replace(".py", ".json"))
+        super().__init__(setting_filepath)
         self.generator = ConfigGenerator()
         self.run()
 
@@ -49,7 +52,7 @@ class AnimeWatchListGUI:
         self.root.title("Anime Watch List")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.resizable(False, False)
-        self.root.geometry("+400+250")
+        self.root.geometry(self.get_geometry())
         icon_img = ImageTk.PhotoImage(file=os.path.join("images", "icon.ico"))
         self.root.tk.call("wm", "iconphoto", self.root._w, icon_img)
 
@@ -285,6 +288,9 @@ class AnimeWatchListGUI:
         self.generator.remove_cache()
 
     def on_close(self):
+        geometry = self.root.geometry()
+        self.settings["geometry"] = geometry[geometry.index("+") :]
+        self.save_settings()
         self.root.destroy()
 
     def on_mousewheel(self, event):
