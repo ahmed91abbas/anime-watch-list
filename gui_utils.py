@@ -9,7 +9,7 @@ from screeninfo import get_monitors
 
 class GuiUtils:
     def __init__(self, filepath):
-        self.filepath = filepath
+        self.settings_filepath = os.path.join("configs", f"{os.path.splitext(os.path.basename(filepath))[0]}.json")
         self.settings = None
 
     def load_settings(func):
@@ -20,11 +20,11 @@ class GuiUtils:
         return wrapper
 
     def read_settings(self):
-        with open(self.filepath, "r") as f:
+        with open(self.settings_filepath, "r") as f:
             return json.load(f)
 
     def save_settings(self):
-        with open(self.filepath, "w") as f:
+        with open(self.settings_filepath, "w") as f:
             json.dump(self.settings, f, indent=4)
 
     @load_settings

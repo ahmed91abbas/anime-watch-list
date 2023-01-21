@@ -44,6 +44,8 @@ def call_process():
         "--add-data",
         "images/*;images",
         "--add-data",
+        "configs/*;configs",
+        "--add-data",
         "config.txt;.",
         "anime_watch_list.py",
     ]

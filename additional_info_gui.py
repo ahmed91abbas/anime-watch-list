@@ -9,8 +9,7 @@ from gui_utils import GuiUtils
 
 class AdditionalInfoGUI(GuiUtils):
     def __init__(self, title, base64_image_data):
-        setting_filepath = os.path.join("configs", os.path.basename(__file__).replace(".py", ".json"))
-        super().__init__(setting_filepath)
+        super().__init__(__file__)
         self.generator = ConfigGenerator()
         self.title = title
         self.base64_image_data = base64_image_data
