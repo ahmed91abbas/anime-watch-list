@@ -1,6 +1,9 @@
+import base64
+import io
 import json
 import os
 
+from PIL import Image, ImageTk
 from screeninfo import get_monitors
 
 
@@ -38,3 +41,18 @@ class GuiUtils:
                     geometry = f"+{m.width // 4}+{m.height // 4}"
         self.settings["geometry"] = geometry
         return geometry
+
+    def add_icon(self, root):
+        icon_img = ImageTk.PhotoImage(file=os.path.join("images", "icon.ico"))
+        root.tk.call("wm", "iconphoto", root._w, icon_img)
+
+    def get_image_data(self, base64_image_data, width, height):
+        image_data = base64.b64decode(base64_image_data)
+        img = Image.open(io.BytesIO(image_data))
+        img = img.resize((width, height), Image.ANTIALIAS)
+        return ImageTk.PhotoImage(img)
+
+    def trim_text(self, text, max_length):
+        if len(text) > max_length:
+            return f"{text[:max_length-3].rstrip()}..."
+        return text

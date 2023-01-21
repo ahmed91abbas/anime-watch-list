@@ -1,11 +1,7 @@
-import base64
-import io
 import os
 import tkinter as tk
 import webbrowser
 from threading import Thread
-
-from PIL import Image, ImageTk
 
 from config_generator import ConfigGenerator
 from gui_utils import GuiUtils
@@ -17,7 +13,7 @@ class AdditionalInfoGUI(GuiUtils):
         super().__init__(setting_filepath)
         self.generator = ConfigGenerator()
         self.title = title
-        raw_image_data = base64.b64decode(base64_image_data)
+        self.base64_image_data = base64_image_data
         self.info_titles = [
             "Url",
             "Source",
@@ -29,11 +25,11 @@ class AdditionalInfoGUI(GuiUtils):
             "Genres",
             "Broadcast",
         ]
-        self.create_gui(raw_image_data)
+        self.create_gui()
         Thread(target=self.update_gui).start()
         self.mainloop()
 
-    def create_gui(self, raw_image_data):
+    def create_gui(self):
         bg_color = "#e6e6ff"
         title_font = ("calibri", 16)
         self.top = tk.Toplevel(bg=bg_color)
@@ -42,8 +38,6 @@ class AdditionalInfoGUI(GuiUtils):
         self.top.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.top.resizable(False, False)
         self.top.focus()
-        icon_img = ImageTk.PhotoImage(file=os.path.join("images", "icon.ico"))
-        self.top.tk.call("wm", "iconphoto", self.top._w, icon_img)
 
         header_frame = tk.Frame(self.top, bg=bg_color)
         body_frame = tk.Frame(self.top, bg=bg_color)
@@ -55,7 +49,7 @@ class AdditionalInfoGUI(GuiUtils):
 
         padx = 15
         pady = 15
-        image = self.get_image_data(raw_image_data, 320, 500)
+        image = self.get_image_data(self.base64_image_data, 320, 500)
         img_label = tk.Label(body_frame, bg=bg_color, image=image)
         img_label.image = image
         img_label.pack(side=tk.LEFT, padx=padx, pady=pady)
@@ -94,6 +88,7 @@ class AdditionalInfoGUI(GuiUtils):
         self.synopsis_text_widget.pack()
 
     def update_gui(self):
+        self.add_icon(self.top)
         self.top.title("Additional information (Loading...)")
         info = self.generator.get_additional_info(self.title)
         self.title_label["text"] = f'{self.title}\n({info.get("title_english", "-")})'
@@ -109,21 +104,11 @@ class AdditionalInfoGUI(GuiUtils):
         self.synopsis_text_widget.config(state=tk.DISABLED)
         self.top.title("Additional information")
 
-    def get_image_data(self, image_raw_data, width, height):
-        img = Image.open(io.BytesIO(image_raw_data))
-        img = img.resize((width, height), Image.ANTIALIAS)
-        return ImageTk.PhotoImage(img)
-
     def on_close(self):
         geometry = self.top.geometry()
         self.settings["geometry"] = geometry[geometry.index("+") :]
         self.save_settings()
         self.top.destroy()
-
-    def trim_text(self, text, max_length):
-        if len(text) > max_length:
-            return f"{text[:max_length-3].rstrip()}..."
-        return text
 
     def mainloop(self):
         tk.mainloop()

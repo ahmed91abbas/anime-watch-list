@@ -1,5 +1,3 @@
-import base64
-import io
 import os
 import subprocess
 import sys
@@ -8,8 +6,6 @@ import webbrowser
 from functools import partial
 from threading import Thread
 from tkinter import messagebox
-
-from PIL import Image, ImageTk
 
 from additional_info_gui import AdditionalInfoGUI
 from config_generator import ConfigGenerator
@@ -53,8 +49,6 @@ class AnimeWatchListGUI(GuiUtils):
         self.root.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.resizable(False, False)
         self.root.geometry(self.get_geometry())
-        icon_img = ImageTk.PhotoImage(file=os.path.join("images", "icon.ico"))
-        self.root.tk.call("wm", "iconphoto", self.root._w, icon_img)
 
         menu = tk.Menu(self.root)
         self.root.config(menu=menu)
@@ -199,6 +193,7 @@ class AnimeWatchListGUI(GuiUtils):
         return elements
 
     def update_gui(self, config, elements):
+        self.add_icon(self.root)
         if len(config) != len(elements):
             raise Exception("config and elements must be of the same length")
 
@@ -221,12 +216,6 @@ class AnimeWatchListGUI(GuiUtils):
             e["watch_button"].config(
                 state=state, command=partial(self.on_open_page, i, c["next_ep_url"], update_config=True, close=True)
             )
-
-    def get_image_data(self, image_base64_data, width, height):
-        image_raw_data = base64.b64decode(image_base64_data)
-        img = Image.open(io.BytesIO(image_raw_data))
-        img = img.resize((width, height), Image.ANTIALIAS)
-        return ImageTk.PhotoImage(img)
 
     def is_valid_url(self, text):
         if text.startswith("http://") or text.startswith("https://") and len(text) >= 12:
@@ -334,11 +323,6 @@ class AnimeWatchListGUI(GuiUtils):
 
     def mainloop(self):
         tk.mainloop()
-
-    def trim_text(self, text, max_length):
-        if len(text) > max_length:
-            return f"{text[:max_length-3].rstrip()}..."
-        return text
 
 
 if __name__ == "__main__":
