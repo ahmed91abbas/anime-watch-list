@@ -33,8 +33,9 @@ class ConfigGenerator:
             "weight": 0,
             "image": {"url": "", "base64_data": self.get_image_base64_data(None)},
         }
-        self.url_category_reg = "^https://.*.?gogoanime.[a-z]+/(category/)"
-        self.url_reg = "^https://.*.?gogoanime.[a-z]+/.*-episode-(\d+(-\d+)?)$"
+        gogoanime_url_reg = "https://.*gogoanime.*.[a-z]+"
+        self.url_category_reg = f"^{gogoanime_url_reg}/(category/)"
+        self.url_reg = f"^{gogoanime_url_reg}/.*-episode-(\d+(-\d+)?)$"
         self.config_filename = config_filename
         self.cache_filename = cache_filename
         self.config = []
