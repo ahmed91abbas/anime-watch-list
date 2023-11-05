@@ -105,8 +105,8 @@ class ConfigGenerator:
 
         if not result:
             result = self.get_unsupported_url_info(url, self.STATUSES["unsupported_url"])
-
-        result["current_ep_url"] = url
+        if not result.get("current_ep_url"):
+            result["current_ep_url"] = url
         result["image"]["base64_data"] = self.get_image_base64_data(result["image"]["url"])
         if result["next_ep_url"]:
             result["weight"] = 1
@@ -117,6 +117,7 @@ class ConfigGenerator:
 
     def get_episode_page_info(self, url):
         response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
+        url = response.url
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.find("div", {"class": "anime-info"}).a.text
         cover_url = soup.find(itemprop="image").get("content")
@@ -127,6 +128,7 @@ class ConfigGenerator:
             next_ep_url = os.path.dirname(url) + next_ep_div_a["href"]
         return {
             "title": title,
+            "current_ep_url": url,
             "next_ep_url": next_ep_url,
             "myanimelist_url": myanimelist_url,
             "image": {"url": cover_url},
@@ -288,6 +290,7 @@ class ConfigGenerator:
             thread.join()
 
         self.save_cache()
+        self.update_config(self.config)
         self.config_load_time = time.time() - start_time
         return self.config
 
