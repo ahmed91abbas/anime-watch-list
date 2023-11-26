@@ -1,5 +1,5 @@
 # Anime Watch List
-GUI based on the gogoanime website in which you can keep track of the anime you are watching and easily see if a new episode is released.
+GUI based on the gogoanime (anitaku) website in which you can keep track of the anime you are watching and easily see if a new episode is released.
 
 All you need to do is add the URLs of the anime you want to watch in the config.txt file and run the application.
 

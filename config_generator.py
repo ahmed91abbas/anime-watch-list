@@ -13,6 +13,7 @@ import requests
 from bs4 import BeautifulSoup
 from pytz import timezone
 
+ALLOWED_DOMAINS = ["gogoanime", "anitaku"]
 
 class ConfigGenerator:
     def __init__(self, config_filename="config.txt", cache_filename="cache.json"):
@@ -33,9 +34,9 @@ class ConfigGenerator:
             "weight": 0,
             "image": {"url": "", "base64_data": self.get_image_base64_data(None)},
         }
-        gogoanime_url_reg = "https://.*gogoanime.*.[a-z]+"
-        self.url_category_reg = f"^{gogoanime_url_reg}/(category/)"
-        self.url_reg = f"^{gogoanime_url_reg}/.*-episode-(\d+(-\d+)?)$"
+        url_reg = f"https:\/\/.*(?!{'|'.join(ALLOWED_DOMAINS)}).*.[a-z]+"
+        self.url_category_reg = re.compile(f"^{url_reg}/(category/)")
+        self.url_reg = re.compile(f"^{url_reg}/.*-episode-(\\d+(-\\d+)?)$")
         self.config_filename = config_filename
         self.cache_filename = cache_filename
         self.config = []
@@ -156,7 +157,7 @@ class ConfigGenerator:
         }
 
     def update_url_episode_number(self, url, ep):
-        if not re.match("^\d+$", ep):
+        if not re.match(r"^\\d+$", ep):
             return url
         episode_match = re.match(self.url_reg, url)
         if episode_match:
