@@ -19,4 +19,4 @@ Build the executable with:
 
         python3 build_executable.py
 
-`pyinstaller version used: 5.0.dev0`
+`Python version used: 3.11.6`

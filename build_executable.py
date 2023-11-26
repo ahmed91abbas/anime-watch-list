@@ -1,7 +1,6 @@
 import os
 import shutil
 import subprocess
-import sys
 
 
 def path_join(list_of_names):
@@ -38,18 +37,20 @@ def call_process():
         "pyinstaller",
         "--icon",
         os.path.join("images", "icon.ico"),
+        "--onefile",
         "--noconsole",
-        "--hidden-import",
-        "six",
         "--add-data",
         "images/*;images",
-        "--add-data",
-        "configs/*;configs",
-        "--add-data",
-        "config.txt;.",
         "anime_watch_list.py",
     ]
-    subprocess.call(params)
+    subprocess.call(params, shell=True)
+
+def add_data():
+    destination_folder = "dist"
+    shutil.copy("config.txt", destination_folder)
+    folders = ["images", "configs"]
+    for folder in folders:
+        shutil.copytree(folder, f"{destination_folder}/{folder}")
 
 
 if __name__ == "__main__":
@@ -57,4 +58,6 @@ if __name__ == "__main__":
     clean_up()
     print("\nCreating the exe...\n")
     call_process()
+    print("\nAdding data...\n")
+    add_data()
     print("\nDone.")

@@ -49,7 +49,7 @@ class GuiUtils:
     def get_image_data(self, base64_image_data, width, height):
         image_data = base64.b64decode(base64_image_data)
         img = Image.open(io.BytesIO(image_data))
-        img = img.resize((width, height), Image.ANTIALIAS)
+        img = img.resize((width, height), Image.LANCZOS)
         return ImageTk.PhotoImage(img)
 
     def trim_text(self, text, max_length):
