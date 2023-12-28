@@ -3,9 +3,15 @@ GUI based on the gogoanime (anitaku) website in which you can keep track of the 
 
 All you need to do is add the URLs of the anime you want to watch in the config.txt file and run the application.
 
-Download the latest release for Windows from [here](https://github.com/ahmed91abbas/anime-watch-list/releases/latest).
+<b>Download the latest release for Windows from [here](https://github.com/ahmed91abbas/anime-watch-list/releases/latest).</b>
 
-![preview](images/preview.png)
+![anime-watch-list](images/anime-watch-list.png)
+
+You can also view more information about any anime by clicking the picture to the left. The information is fetched from [myanimelist.net](https://myanimelist.net/)
+
+![additional-information](images/additional-information.png)
+
+### To run locally, follow these steps:
 
 Download the required packages:
 
