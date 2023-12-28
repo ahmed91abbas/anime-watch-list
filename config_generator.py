@@ -157,7 +157,7 @@ class ConfigGenerator:
         }
 
     def update_url_episode_number(self, url, ep):
-        if not re.match(r"^\\d+$", ep):
+        if not ep.isdigit():
             return url
         episode_match = re.match(self.url_reg, url)
         if episode_match:
