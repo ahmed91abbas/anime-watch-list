@@ -37,16 +37,13 @@ def call_process():
         "pyinstaller",
         "--icon",
         os.path.join("images", "icon.ico"),
-        "--onefile",
         "--noconsole",
-        "--add-data",
-        "images/*;images",
         "anime_watch_list.py",
     ]
     subprocess.call(params, shell=True)
 
 def add_data():
-    destination_folder = "dist"
+    destination_folder = os.path.join("dist", "anime_watch_list")
     shutil.copy("config.txt", destination_folder)
     folders = ["images", "configs"]
     for folder in folders:
