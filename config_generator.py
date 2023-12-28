@@ -1,11 +1,11 @@
 import base64
+import concurrent.futures
 import json
 import os
 import re
 import sys
 import time
 from datetime import datetime
-from threading import Thread
 from urllib.parse import quote, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
@@ -14,6 +14,7 @@ from bs4 import BeautifulSoup
 from pytz import timezone
 
 ALLOWED_DOMAINS = ["gogoanime", "anitaku"]
+MAX_THREADS = 8
 
 class ConfigGenerator:
     def __init__(self, config_filename="config.txt", cache_filename="cache.json"):
@@ -282,14 +283,9 @@ class ConfigGenerator:
         start_time = time.time()
         self.cache = self.get_cache()
         self.config = []
-        threads = []
-        for url in self.get_urls():
-            t = Thread(target=self.get_details, args=(url,))
-            t.start()
-            threads.append(t)
-        for thread in threads:
-            thread.join()
-
+        with concurrent.futures.ThreadPoolExecutor(MAX_THREADS) as executor:
+            futures = [executor.submit(self.get_details, url) for url in self.get_urls()]
+            concurrent.futures.wait(futures)
         self.save_cache()
         self.update_config(self.config)
         self.config_load_time = time.time() - start_time
