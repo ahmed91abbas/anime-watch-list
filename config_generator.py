@@ -257,7 +257,8 @@ class ConfigGenerator:
         }
 
     def stringify(self, value):
-        return str(value).capitalize() if value else "-"
+        value = str(value) if value else "-"
+        return value if value.startswith("http") else value.capitalize()
 
     def resource_path(self, relative_path):
         try:
