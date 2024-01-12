@@ -294,7 +294,7 @@ class AnimeWatchListGUI(GuiUtils):
             self.on_close()
 
     def on_edit_config(self):
-        file_path = self.generator.get_config_filename()
+        file_path = self.generator.get_config_filepath()
         if sys.platform.startswith("darwin"):
             subprocess.call("open", file_path)
         elif os.name == "nt":

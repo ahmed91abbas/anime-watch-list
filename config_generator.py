@@ -17,7 +17,7 @@ ALLOWED_DOMAINS = ["gogoanime", "anitaku"]
 MAX_THREADS = 8
 
 class ConfigGenerator:
-    def __init__(self, config_filename="config.txt", cache_filename="cache.json"):
+    def __init__(self, config_filepath=os.path.join("configs","config.txt"), cache_filepath="cache.json"):
         self.STATUSES = {
             "default": "",
             "not_aired": "Not yet aired",
@@ -38,8 +38,8 @@ class ConfigGenerator:
         url_reg = f"https:\/\/.*(?!{'|'.join(ALLOWED_DOMAINS)}).*.[a-z]+"
         self.url_category_reg = re.compile(f"^{url_reg}/(category/)")
         self.url_reg = re.compile(f"^{url_reg}/.*-episode-(\\d+(-\\d+)?)$")
-        self.config_filename = config_filename
-        self.cache_filename = cache_filename
+        self.config_filepath = config_filepath
+        self.cache_filepath = cache_filepath
         self.config = []
 
     def read_json(self, path):
@@ -53,21 +53,21 @@ class ConfigGenerator:
         with open(path, "w") as f:
             json.dump(data, f, indent=4)
 
-    def get_config_filename(self):
-        return self.config_filename
+    def get_config_filepath(self):
+        return self.config_filepath
 
     def add_line_to_config(self, line):
-        with open(self.config_filename, "a") as f:
+        with open(self.config_filepath, "a") as f:
             f.write(f"{line}\n")
 
     def update_config(self, config):
         config = sorted(config, key=lambda x: x["title"])
-        with open(self.config_filename, "w") as f:
+        with open(self.config_filepath, "w") as f:
             for entry in config:
                 f.write(f'{entry["current_ep_url"]}\n')
 
     def get_urls(self):
-        with open(self.config_filename, "r") as f:
+        with open(self.config_filepath, "r") as f:
             return [line.rstrip() for line in f.readlines()]
 
     def get_details(self, url):
@@ -271,14 +271,14 @@ class ConfigGenerator:
 
     def save_cache(self):
         result = {e["current_ep_url"]: e for e in self.config if e["next_ep_url"]}
-        self.write_json(self.cache_filename, result)
+        self.write_json(self.cache_filepath, result)
 
     def get_cache(self):
-        return self.read_json(self.cache_filename)
+        return self.read_json(self.cache_filepath)
 
     def remove_cache(self):
-        if os.path.exists(self.cache_filename):
-            os.remove(self.cache_filename)
+        if os.path.exists(self.cache_filepath):
+            os.remove(self.cache_filepath)
 
     def get_config(self):
         start_time = time.time()
