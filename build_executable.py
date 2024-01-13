@@ -42,6 +42,7 @@ def call_process():
     ]
     subprocess.call(params, shell=True)
 
+
 def add_data():
     destination_folder = os.path.join("dist", "anime_watch_list")
     folders = ["images", "configs"]

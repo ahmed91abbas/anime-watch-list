@@ -16,8 +16,9 @@ from pytz import timezone
 ALLOWED_DOMAINS = ["gogoanime", "anitaku"]
 MAX_THREADS = 8
 
+
 class ConfigGenerator:
-    def __init__(self, config_filepath=os.path.join("configs","config.txt"), cache_filepath="cache.json"):
+    def __init__(self, config_filepath=os.path.join("configs", "config.txt"), cache_filepath="cache.json"):
         self.STATUSES = {
             "default": "",
             "not_aired": "Not yet aired",
@@ -135,7 +136,7 @@ class ConfigGenerator:
             next_ep_url = os.path.dirname(url) + next_ep_div_a["href"]
         details["title"] = title
         details["current_ep_url"] = url
-        details["next_ep_url"] =next_ep_url
+        details["next_ep_url"] = next_ep_url
         details["myanimelist_url"] = details["myanimelist_url"] or myanimelist_url
         details["image"]["url"] = cover_url
 
@@ -228,8 +229,18 @@ class ConfigGenerator:
         for item in response["data"]:
             for title_object in item["titles"]:
                 if title == title_object["title"]:
-                    return self.map_myanimelist_response(item)
+                    info = self.map_myanimelist_response(item)
+                    self.update_myanimelist_url(info["url"], title)
+                    return info
         return {}
+
+    def update_myanimelist_url(self, url, title):
+        cache = self.get_cache()
+        for v in cache.values():
+            if v["title"] == title:
+                v["myanimelist_url"] = url
+                break
+        self.write_json(self.cache_filepath, cache)
 
     def map_myanimelist_response(self, response):
         current_zone = "Europe/Stockholm"
