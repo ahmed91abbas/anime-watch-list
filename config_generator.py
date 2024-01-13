@@ -38,6 +38,7 @@ class ConfigGenerator:
         url_reg = f"https:\/\/.*(?!{'|'.join(ALLOWED_DOMAINS)}).*.[a-z]+"
         self.url_category_reg = re.compile(f"^{url_reg}/(category/)")
         self.url_reg = re.compile(f"^{url_reg}/.*-episode-(\\d+(-\\d+)?)$")
+        self.cache_key_sub_reg = re.compile("-episode-\\d+(-\\d+)?")
         self.config_filepath = config_filepath
         self.cache_filepath = cache_filepath
         self.config = []
@@ -291,7 +292,7 @@ class ConfigGenerator:
             os.remove(self.cache_filepath)
 
     def get_cache_key(self, url):
-        return re.sub(r"-episode-\d+", "", url)
+        return re.sub(self.cache_key_sub_reg, "", url)
 
     def get_config(self):
         start_time = time.time()
