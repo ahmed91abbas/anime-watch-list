@@ -273,10 +273,11 @@ class ConfigGenerator:
     def save_cache(self):
         result = {}
         for e in self.config:
-            result[self.get_cache_key(e["current_ep_url"])] = {
+            key = self.get_cache_key(e["current_ep_url"])
+            result[key] = {
                 "title": e["title"],
-                "current_ep_url": e["current_ep_url"],
-                "next_ep_url": e["next_ep_url"],
+                "current_ep_url": "" if key in result else e["current_ep_url"],
+                "next_ep_url": "" if key in result else e["next_ep_url"],
                 "myanimelist_url": e["myanimelist_url"],
                 "image": {"url": e["image"]["url"], "base64_data": e["image"]["base64_data"]},
             }
