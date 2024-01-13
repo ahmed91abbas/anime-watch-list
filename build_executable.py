@@ -44,7 +44,6 @@ def call_process():
 
 def add_data():
     destination_folder = os.path.join("dist", "anime_watch_list")
-    shutil.copy("config.txt", destination_folder)
     folders = ["images", "configs"]
     for folder in folders:
         shutil.copytree(folder, f"{destination_folder}/{folder}")
