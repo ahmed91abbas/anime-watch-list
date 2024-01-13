@@ -71,53 +71,56 @@ class ConfigGenerator:
             return [line.rstrip() for line in f.readlines()]
 
     def get_details(self, url):
-        try:
-            result = self.get_info_from_cache(url)
-        except:
-            result = self.get_info_from_url(url)
-        self.config.append(result)
+        details = self.get_details_from_cache(url)
+        details = self.extend_details(url, details)
+        self.config.append(details)
 
-    def get_info_from_cache(self, url):
-        cache = self.cache[url]
-        info = {
-            "title": cache["title"],
-            "status": cache["status"],
-            "current_ep_url": cache["current_ep_url"],
-            "next_ep_url": cache["next_ep_url"],
-            "myanimelist_url": cache["myanimelist_url"],
-            "ep": cache["ep"],
+    def get_details_from_cache(self, url):
+        cache = self.cache.get(url, {})
+        image = cache.get("image", {})
+        details = {
+            "title": cache.get("title"),
+            "current_ep_url": cache.get("current_ep_url"),
+            "next_ep_url": cache.get("next_ep_url"),
+            "myanimelist_url": cache.get("myanimelist_url"),
+            "image": {"url": image.get("url"), "base64_data": image.get("base64_data")},
             "loaded_from_cache": True,
-            "image": {"url": cache["image"]["url"], "base64_data": cache["image"]["base64_data"]},
         }
-        return {**self.base_info, **info}
+        return details
 
-    def get_info_from_url(self, url):
+    def extend_details(self, url, details):
+        next_ep_url_from_cache = details.get("next_ep_url")
         category_match = re.match(self.url_category_reg, url)
         episode_match = re.match(self.url_reg, url)
-        result = None
-        try:
-            if category_match:
-                result = self.get_category_page_info(url)
-                result["ep"] = "0"
-            elif episode_match:
-                result = self.get_episode_page_info(url)
-                result["ep"] = episode_match.group(1)
-        except:
-            result = self.get_unsupported_url_info(url, self.STATUSES["failed"])
+        update_method = None
+        if category_match:
+            update_method = self.update_with_category_page_info
+            details["ep"] = "0"
+        elif episode_match:
+            update_method = self.update_with_episode_page_info
+            details["ep"] = episode_match.group(1)
+        else:
+            details = self.get_unsupported_url_info(url, self.STATUSES["unsupported_url"])
+            return {**self.base_info, **details}
 
-        if not result:
-            result = self.get_unsupported_url_info(url, self.STATUSES["unsupported_url"])
-        if not result.get("current_ep_url"):
-            result["current_ep_url"] = url
-        result["image"]["base64_data"] = self.get_image_base64_data(result["image"]["url"])
-        if result["next_ep_url"]:
-            result["weight"] = 1
-        return {**self.base_info, **result}
+        if not all(list(details.values()) + [details["image"]["url"]]):
+            try:
+                update_method(url, details)
+                details["loaded_from_cache"] = False
+            except:
+                details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
+
+        if not details["image"]["base64_data"]:
+            details["image"]["base64_data"] = self.get_image_base64_data(details["image"]["url"])
+            details["loaded_from_cache"] = False
+        if details.get("next_ep_url") != next_ep_url_from_cache:
+            details["weight"] = 1
+        return {**self.base_info, **details}
 
     def get_unsupported_url_info(self, url, status):
-        return {**self.base_info, "title": url, "status": status}
+        return {**self.base_info, "title": url, "status": status, "current_ep_url": url}
 
-    def get_episode_page_info(self, url):
+    def update_with_episode_page_info(self, url, details):
         response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
         url = response.url
         soup = BeautifulSoup(response.text, "html.parser")
@@ -128,15 +131,13 @@ class ConfigGenerator:
         next_ep_div_a = soup.find("div", {"class": "anime_video_body_episodes_r"}).a
         if next_ep_div_a:
             next_ep_url = os.path.dirname(url) + next_ep_div_a["href"]
-        return {
-            "title": title,
-            "current_ep_url": url,
-            "next_ep_url": next_ep_url,
-            "myanimelist_url": myanimelist_url,
-            "image": {"url": cover_url},
-        }
+        details["title"] = details["title"] or title
+        details["current_ep_url"] = details["current_ep_url"] or url
+        details["next_ep_url"] = details["next_ep_url"] or next_ep_url
+        details["myanimelist_url"] = details["myanimelist_url"] or myanimelist_url
+        details["image"]["url"] = details["image"]["url"] or cover_url
 
-    def get_category_page_info(self, url):
+    def update_with_category_page_info(self, url, details):
         response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.find("div", {"class": "anime_info_body_bg"}).h1.text
@@ -149,13 +150,12 @@ class ConfigGenerator:
             next_ep_url = self.update_url_episode_number(url, "1")
         else:
             status = self.STATUSES["not_aired"]
-        return {
-            "title": title,
-            "status": status,
-            "next_ep_url": next_ep_url,
-            "myanimelist_url": myanimelist_url,
-            "image": {"url": cover_url},
-        }
+        details["title"] = details["title"] or title
+        details["status"] = status
+        details["current_ep_url"] = details["current_ep_url"] or url
+        details["next_ep_url"] = details["next_ep_url"] or next_ep_url
+        details["myanimelist_url"] = details["myanimelist_url"] or myanimelist_url
+        details["image"]["url"] = details["image"]["url"] or cover_url
 
     def update_url_episode_number(self, url, ep):
         if not ep.isdigit():
@@ -270,7 +270,16 @@ class ConfigGenerator:
         return os.path.join(base_path, relative_path)
 
     def save_cache(self):
-        result = {e["current_ep_url"]: e for e in self.config if e["next_ep_url"]}
+        result = {}
+        for e in self.config:
+            result[e["current_ep_url"]] = {
+                "title": e["title"],
+                "status": e["status"],
+                "current_ep_url": e["current_ep_url"],
+                "next_ep_url": e["next_ep_url"],
+                "myanimelist_url": e["myanimelist_url"],
+                "image": {"url": e["image"]["url"], "base64_data": e["image"]["base64_data"]},
+            }
         self.write_json(self.cache_filepath, result)
 
     def get_cache(self):
