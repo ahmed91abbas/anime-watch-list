@@ -65,6 +65,7 @@ class ConfigGenerator:
         with open(self.config_filepath, "w") as f:
             for entry in config:
                 f.write(f'{entry["current_ep_url"]}\n')
+        self.save_cache()
 
     def get_urls(self):
         with open(self.config_filepath, "r") as f:
@@ -76,7 +77,7 @@ class ConfigGenerator:
         self.config.append(details)
 
     def get_details_from_cache(self, url):
-        cache = self.cache.get(url, {})
+        cache = self.cache.get(self.get_cache_key(url), {})
         image = cache.get("image", {})
         details = {
             "title": cache.get("title"),
@@ -131,11 +132,11 @@ class ConfigGenerator:
         next_ep_div_a = soup.find("div", {"class": "anime_video_body_episodes_r"}).a
         if next_ep_div_a:
             next_ep_url = os.path.dirname(url) + next_ep_div_a["href"]
-        details["title"] = details["title"] or title
-        details["current_ep_url"] = details["current_ep_url"] or url
-        details["next_ep_url"] = details["next_ep_url"] or next_ep_url
+        details["title"] = title
+        details["current_ep_url"] = url
+        details["next_ep_url"] =next_ep_url
         details["myanimelist_url"] = details["myanimelist_url"] or myanimelist_url
-        details["image"]["url"] = details["image"]["url"] or cover_url
+        details["image"]["url"] = cover_url
 
     def update_with_category_page_info(self, url, details):
         response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
@@ -150,12 +151,12 @@ class ConfigGenerator:
             next_ep_url = self.update_url_episode_number(url, "1")
         else:
             status = self.STATUSES["not_aired"]
-        details["title"] = details["title"] or title
+        details["title"] = title
         details["status"] = status
-        details["current_ep_url"] = details["current_ep_url"] or url
-        details["next_ep_url"] = details["next_ep_url"] or next_ep_url
+        details["current_ep_url"] = url
+        details["next_ep_url"] = next_ep_url
         details["myanimelist_url"] = details["myanimelist_url"] or myanimelist_url
-        details["image"]["url"] = details["image"]["url"] or cover_url
+        details["image"]["url"] = cover_url
 
     def update_url_episode_number(self, url, ep):
         if not ep.isdigit():
@@ -272,9 +273,8 @@ class ConfigGenerator:
     def save_cache(self):
         result = {}
         for e in self.config:
-            result[e["current_ep_url"]] = {
+            result[self.get_cache_key(e["current_ep_url"])] = {
                 "title": e["title"],
-                "status": e["status"],
                 "current_ep_url": e["current_ep_url"],
                 "next_ep_url": e["next_ep_url"],
                 "myanimelist_url": e["myanimelist_url"],
@@ -288,6 +288,9 @@ class ConfigGenerator:
     def remove_cache(self):
         if os.path.exists(self.cache_filepath):
             os.remove(self.cache_filepath)
+
+    def get_cache_key(self, url):
+        return re.sub(r"-episode-\d+", "", url)
 
     def get_config(self):
         start_time = time.time()

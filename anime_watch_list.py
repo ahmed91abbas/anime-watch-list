@@ -250,6 +250,7 @@ class AnimeWatchListGUI(GuiUtils):
             elif ep != self.config[i]["ep"]:
                 new_url = self.generator.update_url_episode_number(self.config[i]["current_ep_url"], ep)
                 self.config[i]["current_ep_url"] = new_url
+                self.config[i]["next_ep_url"] = ""
         self.generator.update_config(self.config)
         self.on_reload()
 
@@ -288,6 +289,7 @@ class AnimeWatchListGUI(GuiUtils):
     def on_open_page(self, index, url, update_config=False, close=False):
         if update_config:
             self.config[index]["current_ep_url"] = self.config[index]["next_ep_url"]
+            self.config[index]["next_ep_url"] = ""
             self.generator.update_config(self.config)
         webbrowser.open(url, new=0, autoraise=True)
         if close:
