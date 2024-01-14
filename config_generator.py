@@ -89,6 +89,9 @@ class ConfigGenerator:
             "image": {"url": image.get("url"), "base64_data": image.get("base64_data")},
             "loaded_from_cache": True,
         }
+        if url != details["current_ep_url"]:
+            details["current_ep_url"] = url
+            details["next_ep_url"] = ""
         return details
 
     def extend_details(self, url, details):
