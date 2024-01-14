@@ -1,4 +1,3 @@
-import os
 import tkinter as tk
 import webbrowser
 from threading import Thread
@@ -43,8 +42,9 @@ class AdditionalInfoGUI(GuiUtils):
         header_frame.pack()
         body_frame.pack()
 
-        self.title_label = tk.Label(header_frame, text=f"{self.title}\n-", bg=bg_color, font=title_font)
-        self.title_label.pack(pady=10)
+        self.title_text = tk.Text(header_frame, wrap="word", height=2, bd=0, font=title_font, bg=bg_color)
+        self.replace_widget_text(self.title_text, f"{self.title}\n-")
+        self.title_text.pack(pady=10)
 
         padx = 15
         pady = 15
@@ -90,7 +90,7 @@ class AdditionalInfoGUI(GuiUtils):
         self.add_icon(self.top)
         self.top.title("Additional information (Loading...)")
         info = self.generator.get_additional_info(self.title)
-        self.title_label["text"] = f'{self.title}\n({info.get("title_english", "-")})'
+        self.replace_widget_text(self.title_text, f'{self.title}\n({info.get("title_english", "-")})')
         for info_title in self.info_titles:
             label = self.labels_dict[info_title]
             value = str(info.get(info_title.lower(), "-"))
@@ -111,3 +111,11 @@ class AdditionalInfoGUI(GuiUtils):
 
     def mainloop(self):
         tk.mainloop()
+
+    def replace_widget_text(self, text_widget, text):
+        text_widget.config(state=tk.NORMAL)
+        text_widget.delete("1.0", "end")
+        text_widget.insert("1.0", text)
+        text_widget.tag_configure("center", justify="center")
+        text_widget.tag_add("center", "1.0", "end")
+        text_widget.config(state=tk.DISABLED)
