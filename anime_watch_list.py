@@ -11,6 +11,11 @@ from additional_info_gui import AdditionalInfoGUI
 from config_generator import ConfigGenerator
 from gui_utils import GuiUtils
 
+BG_COLOR = "#e6e6ff"
+SECONDARY_COLOR = "#b28fc7"
+BUTTON_COLOR = "#f7e4d0"
+MAX_ROW_COUNT = 8
+
 
 class AnimeWatchListGUI(GuiUtils):
     def __init__(self):
@@ -19,8 +24,8 @@ class AnimeWatchListGUI(GuiUtils):
         self.run()
 
     def run(self):
-        self.elements = self.create_gui(self.generator.get_skeleton_config())
-        Thread(target=self.add_config_to_gui, args=(self.elements,)).start()
+        self.create_gui()
+        self.on_reload()
         self.mainloop()
 
     def add_config_to_gui(self, elements):
@@ -37,13 +42,9 @@ class AnimeWatchListGUI(GuiUtils):
         l2 = list(filter(lambda x: not x["next_ep_url"], config))
         return l1 + l2
 
-    def create_gui(self, config, max_row_count=8):
-        bg_color = "#e6e6ff"
-        secondary_color = "#b28fc7"
-        button_color = "#f7e4d0"
-
+    def create_gui(self):
         self.root = tk.Tk()
-        self.root.configure(background=secondary_color)
+        self.root.configure(background=SECONDARY_COLOR)
         self.root.title("Anime Watch List")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.resizable(False, False)
@@ -68,55 +69,56 @@ class AnimeWatchListGUI(GuiUtils):
             "font": ("calibri", 12),
             "width": 10,
             "height": 1,
-            "bg": button_color,
-            "activebackground": bg_color,
+            "bg": BUTTON_COLOR,
+            "activebackground": BG_COLOR,
             "compound": tk.CENTER,
             "highlightthickness": 2,
         }
         button_pack_config = {"side": "left", "padx": 5, "pady": 5}
-        self.site_frame = tk.Frame(self.root, bg=secondary_color)
-        self.site_entry = tk.Entry(self.site_frame, width=60, bg=bg_color, font=("calibri", 12))
+        self.site_frame = tk.Frame(self.root, bg=SECONDARY_COLOR)
+        self.site_entry = tk.Entry(self.site_frame, width=60, bg=BG_COLOR, font=("calibri", 12))
         self.site_entry.pack(side="left", padx=20, ipady=4)
         site_add_button = tk.Button(self.site_frame, text="Add", **button_config, command=self.on_site_add)
         site_add_button.pack(**button_pack_config)
         site_cancel_button = tk.Button(self.site_frame, text="Cancel", **button_config, command=self.on_site_cancel)
         site_cancel_button.pack(**button_pack_config)
 
-        self.edit_frame = tk.Frame(self.root, bg=secondary_color)
+        self.edit_frame = tk.Frame(self.root, bg=SECONDARY_COLOR)
         button_pack_config = {"side": "left", "padx": 15}
         save_button = tk.Button(self.edit_frame, text="Save", **button_config, command=self.on_edit_save)
         save_button.pack(**button_pack_config)
         edit_cancel_button = tk.Button(self.edit_frame, text="Cancel", **button_config, command=self.on_edit_cancel)
         edit_cancel_button.pack(**button_pack_config)
+        self.body_frame = tk.Frame(self.root, bg=SECONDARY_COLOR)
 
-        body_frame = tk.Frame(self.root, bg=secondary_color)
-        body_frame.grid(row=1)
+    def create_body_frame(self, config):
+        body_frame = tk.Frame(self.root, bg=SECONDARY_COLOR)
 
         if not config:
             body_frame.grid_propagate(False)
             tk.Label(
-                body_frame, text="No content found in config.txt", bg=secondary_color, font=("calibri", 22)
+                body_frame, text="No content found in config.txt", bg=SECONDARY_COLOR, font=("calibri", 22)
             ).grid()
             body_frame.config(width=500, height=300)
             return []
 
         self.canvas = tk.Canvas(body_frame, bd=0, highlightthickness=0)
         scrollbar = tk.Scrollbar(body_frame, orient="vertical", command=self.canvas.yview)
-        scrollable_frame = tk.Frame(self.canvas, bg=secondary_color)
+        scrollable_frame = tk.Frame(self.canvas, bg=SECONDARY_COLOR)
         self.canvas.grid_propagate(False)
         scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True, pady=5)
 
-        if len(config) > max_row_count:
+        if len(config) > MAX_ROW_COUNT:
             scrollbar.pack(side="right", fill="y")
             self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
 
         padx = 15
         pady = 5
         title_width = 45
-        component_config = {"height": 2, "bg": bg_color, "font": ("calibri", 16), "highlightthickness": 0, "border": 0}
+        component_config = {"height": 2, "bg": BG_COLOR, "font": ("calibri", 16), "highlightthickness": 0, "border": 0}
         img_width = img_height = component_config["height"] * 29
         elements = []
         for i, c in enumerate(config):
@@ -148,8 +150,8 @@ class AnimeWatchListGUI(GuiUtils):
             element["ep_entry"] = ep_entry
 
             main_button_config = {
-                "bg": button_color,
-                "activebackground": bg_color,
+                "bg": BUTTON_COLOR,
+                "activebackground": BG_COLOR,
                 "compound": tk.CENTER,
                 "highlightthickness": 2,
                 "font": component_config["font"],
@@ -165,7 +167,7 @@ class AnimeWatchListGUI(GuiUtils):
             element["remove_button"] = remove_button
 
             element["marked_for_deletion"] = False
-            element["bg_color"] = bg_color
+            element["bg_color"] = BG_COLOR
 
             elements.append(element)
 
@@ -187,9 +189,9 @@ class AnimeWatchListGUI(GuiUtils):
             + padx * 4
         )
         self.canvas.config(
-            width=row_width, height=row_height * min(max_row_count, len(config)), yscrollincrement=row_height
+            width=row_width, height=row_height * min(MAX_ROW_COUNT, len(config)), yscrollincrement=row_height
         )
-        return elements
+        return body_frame, elements
 
     def update_gui(self, config, elements):
         self.add_icon(self.root)
@@ -236,8 +238,7 @@ class AnimeWatchListGUI(GuiUtils):
         if self.is_valid_url(site):
             self.generator.add_line_to_config(site)
             self.on_reload()
-        else:
-            self.site_frame.grid_forget()
+        self.on_site_cancel()
 
     def on_site_cancel(self):
         self.site_frame.grid_forget()
@@ -253,6 +254,7 @@ class AnimeWatchListGUI(GuiUtils):
                 self.config[i]["next_ep_url"] = ""
         self.generator.update_config(self.config)
         self.on_reload()
+        self.on_edit_cancel()
 
     def on_edit_cancel(self):
         self.edit_frame.grid_forget()
@@ -265,8 +267,12 @@ class AnimeWatchListGUI(GuiUtils):
             e["marked_for_deletion"] = False
 
     def on_reload(self):
-        self.on_close()
-        self.run()
+        body_frame, elements = self.create_body_frame(self.generator.get_skeleton_config())
+        body_frame.grid(row=1)
+        self.body_frame.destroy()
+        self.body_frame = body_frame
+        self.elements = elements
+        Thread(target=self.add_config_to_gui, args=(self.elements,)).start()
 
     def on_stats(self):
         stats = self.generator.get_stats()
