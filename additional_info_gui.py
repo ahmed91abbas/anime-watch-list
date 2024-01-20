@@ -62,21 +62,22 @@ class AdditionalInfoGUI(GuiUtils):
 
         first_column_width = max([len(title) for title in self.info_titles]) + 2
         second_column_width = 40
-        label_config = {"bg": bg_color, "font": ("calibri", 13), "borderwidth": 2, "relief": "groove"}
+        label_text_config = {"bg": bg_color, "font": ("calibri", 13), "borderwidth": 2, "relief": "groove"}
         label_grid_config = {"sticky": "w"}
-        self.labels_dict = dict()
+        self.text_widgets_dict = dict()
         for i, info_title in enumerate(self.info_titles):
-            label1 = tk.Label(info_table_frame, text=info_title, width=first_column_width, **label_config)
-            label1.grid(row=i, column=0, **label_grid_config)
-            label2 = tk.Label(info_table_frame, text="-", width=second_column_width, **label_config)
-            label2.grid(row=i, column=1, **label_grid_config)
-            self.labels_dict[info_title] = label2
+            header_label = tk.Label(info_table_frame, text=info_title, width=first_column_width, **label_text_config)
+            header_label.grid(row=i, column=0, **label_grid_config)
+            data_text_widget = tk.Text(info_table_frame, width=second_column_width, height=1, **label_text_config)
+            self.replace_widget_text(data_text_widget, "-")
+            data_text_widget.grid(row=i, column=1, **label_grid_config)
+            self.text_widgets_dict[info_title] = data_text_widget
 
         height = 20 - len(self.info_titles)
         width = first_column_width + second_column_width
         self.synopsis_text_widget = tk.Text(
             info_free_text_frame,
-            font=label_config["font"],
+            font=label_text_config["font"],
             wrap="word",
             width=width,
             height=height,
@@ -92,13 +93,13 @@ class AdditionalInfoGUI(GuiUtils):
         info = self.generator.get_additional_info(self.title)
         self.replace_widget_text(self.title_text, f'{self.title}\n({info.get("title_english", "-")})')
         for info_title in self.info_titles:
-            label = self.labels_dict[info_title]
+            text_widget = self.text_widgets_dict[info_title]
             value = str(info.get(info_title.lower(), "-"))
-            label.config(text=self.trim_text(value, 40))
+            self.replace_widget_text(text_widget, value)
             if info_title == "Url":
                 url = value
-                label.bind("<Button-1>", lambda e: webbrowser.open(url, new=0, autoraise=True))
-                label.config(fg="blue")
+                text_widget.bind("<Button-1>", lambda e: webbrowser.open(url, new=0, autoraise=True))
+                text_widget.config(fg="blue")
         self.synopsis_text_widget.insert(tk.INSERT, info.get("synopsis", "-"))
         self.synopsis_text_widget.config(state=tk.DISABLED)
         self.top.title("Additional information")
