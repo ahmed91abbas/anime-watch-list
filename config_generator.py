@@ -25,6 +25,7 @@ class ConfigGenerator:
             "not_aired": "Not yet aired",
             "unsupported_url": "UNSUPPORTED URL",
             "failed": "Failed",
+            "finished": "✅",
         }
         self.base_info = {
             "title": "Loading...",
@@ -35,6 +36,7 @@ class ConfigGenerator:
             "ep": "-1",
             "loaded_from_cache": False,
             "weight": 0,
+            "episodes": None,
             "image": {"url": "", "base64_data": self.get_image_base64_data(None)},
         }
         url_reg = f"https:\/\/.*(?!{'|'.join(ALLOWED_DOMAINS)}).*.[a-z]+"
@@ -88,6 +90,7 @@ class ConfigGenerator:
             "next_ep_url": cache.get("next_ep_url"),
             "myanimelist_url": cache.get("myanimelist_url"),
             "image": {"url": image.get("url"), "base64_data": image.get("base64_data")},
+            "episodes": cache.get("episodes"),
             "loaded_from_cache": True,
         }
         if url != details["current_ep_url"]:
@@ -110,7 +113,15 @@ class ConfigGenerator:
             details = self.get_unsupported_url_info(url, self.STATUSES["unsupported_url"])
             return {**self.base_info, **details}
 
-        if not all(list(details.values()) + [details["image"]["url"]]):
+        if details["episodes"] == details["ep"]:
+            details["status"] = self.STATUSES["finished"]
+        elif (
+            not details["title"]
+            or not details["current_ep_url"]
+            or not details["next_ep_url"]
+            or not details["myanimelist_url"]
+            or not details["image"]["url"]
+        ):
             try:
                 update_method(url, details)
                 details["loaded_from_cache"] = False
@@ -234,15 +245,16 @@ class ConfigGenerator:
             for title_object in item["titles"]:
                 if title == title_object["title"]:
                     info = self.map_myanimelist_response(item)
-                    self.update_myanimelist_url(info["url"], title)
+                    self.update_cache({"myanimelist_url": info["url"], "episodes": info["episodes"]}, title)
                     return info
         return {}
 
-    def update_myanimelist_url(self, url, title):
+    def update_cache(self, fields_to_update, title):
         cache = self.get_cache()
-        for v in cache.values():
+        for k, v in cache.items():
             if v["title"] == title:
-                v["myanimelist_url"] = url
+                for k2, v2 in fields_to_update.items():
+                    cache[k][k2] = v2
                 break
         self.write_json(self.cache_filepath, cache)
 
@@ -295,6 +307,7 @@ class ConfigGenerator:
                 "current_ep_url": "" if key in result else e["current_ep_url"],
                 "next_ep_url": "" if key in result else e["next_ep_url"],
                 "myanimelist_url": e["myanimelist_url"],
+                "episodes": e["episodes"],
                 "image": {"url": e["image"]["url"], "base64_data": e["image"]["base64_data"]},
             }
         self.write_json(self.cache_filepath, result)
