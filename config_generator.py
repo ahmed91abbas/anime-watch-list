@@ -203,7 +203,7 @@ class ConfigGenerator:
                 raw_data = urlopen(req).read()
             except:
                 pass
-        else:
+        if not raw_data:
             with open(self.resource_path(os.path.join("images", "image-not-found.png")), "rb") as f:
                 raw_data = f.read()
         return base64.b64encode(raw_data).decode("utf-8")
