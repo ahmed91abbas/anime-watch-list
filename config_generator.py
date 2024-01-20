@@ -43,6 +43,8 @@ class ConfigGenerator:
         self.url_category_reg = re.compile(f"^{url_reg}/(category/)")
         self.url_reg = re.compile(f"^{url_reg}/.*-episode-(\\d+(-\\d+)?)$")
         self.cache_key_sub_reg = re.compile("-episode-\\d+(-\\d+)?")
+        self.title_parentheses_reg = re.compile(r" (\(.*\))$")
+        self.title_special_chars_reg = re.compile(r"[^\w\s\-_]")
         self.config_filepath = os.path.join(CONFIG_DIR, config_filename)
         self.cache_filepath = os.path.join(CONFIG_DIR, cache_filename)
         self.config = []
@@ -232,22 +234,24 @@ class ConfigGenerator:
         return days[(days.index(day) + 1) % len(days)], converted_time
 
     def get_additional_info(self, title):
-        m = re.match(r".* (\(.*\))", title)
-        if m:
-            title = title.replace(m.group(1), "").rstrip()
+        filtered_title = self.filter_title(title)
         url = "https://api.jikan.moe/v4/anime"
-        params = {"q": title, "limit": "5"}
+        params = {"q": filtered_title, "limit": "5"}
         response = requests.request("GET", url, params=params)
         response = response.json()
         if not "data" in response:
             return {}
         for item in response["data"]:
             for title_object in item["titles"]:
-                if title == title_object["title"]:
+                if filtered_title == self.filter_title(title_object["title"]):
                     info = self.map_myanimelist_response(item)
                     self.update_cache({"myanimelist_url": info["url"], "episodes": info["episodes"]}, title)
                     return info
         return {}
+
+    def filter_title(self, title):
+        title = re.sub(self.title_parentheses_reg, '', title).rstrip()
+        return re.sub(self.title_special_chars_reg, '', title).lower()
 
     def update_cache(self, fields_to_update, title):
         cache = self.get_cache()
