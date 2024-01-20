@@ -98,8 +98,8 @@ class AdditionalInfoGUI(GuiUtils):
             self.replace_widget_text(text_widget, value)
             if info_title == "Url":
                 url = value
-                text_widget.bind("<Button-1>", lambda e: webbrowser.open(url, new=0, autoraise=True))
-                text_widget.config(fg="blue")
+                text_widget.bind("<ButtonRelease-1>", lambda e: webbrowser.open(url, new=0, autoraise=True))
+                text_widget.config(fg="blue", cursor="hand2")
         self.synopsis_text_widget.insert(tk.INSERT, info.get("synopsis", "-"))
         self.synopsis_text_widget.config(state=tk.DISABLED)
         self.top.title("Additional information")
