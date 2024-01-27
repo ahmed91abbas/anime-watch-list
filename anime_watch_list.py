@@ -96,11 +96,12 @@ class AnimeWatchListGUI(GuiUtils):
 
         if not config:
             body_frame.grid_propagate(False)
+            self.on_add()
             tk.Label(
-                body_frame, text="No content found in config.txt", bg=SECONDARY_COLOR, font=("calibri", 22)
-            ).grid()
-            body_frame.config(width=500, height=300)
-            return []
+                body_frame, text=f"No content found in {self.generator.get_config_filepath()}", bg=SECONDARY_COLOR, font=("calibri", 22)
+            ).grid(padx=15, pady=15)
+            body_frame.config(width=822, height=300)
+            return body_frame, []
 
         self.canvas = tk.Canvas(body_frame, bd=0, highlightthickness=0)
         scrollbar = tk.Scrollbar(body_frame, orient="vertical", command=self.canvas.yview)
@@ -311,6 +312,8 @@ class AnimeWatchListGUI(GuiUtils):
             subprocess.call(["xdg-open", file_path])
 
     def on_edit(self):
+        if not self.elements:
+            return
         self.edit_frame.grid(row=2, pady=20)
         for i, e in enumerate(self.elements):
             e["ep_entry"].delete(0, "end")
