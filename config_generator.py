@@ -250,8 +250,8 @@ class ConfigGenerator:
         return {}
 
     def filter_title(self, title):
-        title = re.sub(self.title_parentheses_reg, '', title).rstrip()
-        return re.sub(self.title_special_chars_reg, '', title).lower()
+        title = re.sub(self.title_parentheses_reg, "", title).rstrip()
+        return re.sub(self.title_special_chars_reg, "", title).lower()
 
     def update_cache(self, fields_to_update, title):
         cache = self.get_cache()

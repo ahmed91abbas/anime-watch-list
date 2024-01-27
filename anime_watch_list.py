@@ -219,9 +219,7 @@ class AnimeWatchListGUI(GuiUtils):
             )
 
     def is_valid_url(self, text):
-        if text.startswith("http://") or text.startswith("https://") and len(text) >= 12:
-            return True
-        return False
+        return text.startswith("http://") or text.startswith("https://") and len(text) >= 12
 
     def on_add(self):
         self.site_entry.delete(0, "end")
@@ -293,6 +291,8 @@ class AnimeWatchListGUI(GuiUtils):
             self.canvas.yview_scroll(-1 * (event.delta // 120), "units")
 
     def on_open_page(self, index, url, update_config=False, close=False):
+        if not self.is_valid_url(url):
+            return
         if update_config:
             self.config[index]["current_ep_url"] = self.config[index]["next_ep_url"]
             self.config[index]["next_ep_url"] = ""
@@ -303,12 +303,12 @@ class AnimeWatchListGUI(GuiUtils):
 
     def on_edit_config(self):
         file_path = self.generator.get_config_filepath()
-        if sys.platform.startswith("darwin"):
-            subprocess.call("open", file_path)
-        elif os.name == "nt":
+        if sys.platform.startswith("win"):
             os.startfile(file_path)
-        elif os.name == "posix":
-            subprocess.call("xdg-open", file_path)
+        elif sys.platform.startswith("darwin"):
+            subprocess.call(["open", file_path])
+        else:
+            subprocess.call(["xdg-open", file_path])
 
     def on_edit(self):
         self.edit_frame.grid(row=2, pady=20)
