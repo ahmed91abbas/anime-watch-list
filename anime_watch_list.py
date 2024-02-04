@@ -77,7 +77,7 @@ class AnimeWatchListGUI(GuiUtils):
         button_pack_config = {"side": "left", "padx": 5, "pady": 5}
         self.site_frame = tk.Frame(self.root, bg=SECONDARY_COLOR)
         self.site_entry = tk.Entry(self.site_frame, width=60, bg=BG_COLOR, font=("calibri", 12))
-        self.site_entry.pack(side="left", padx=20, ipady=4)
+        self.site_entry.pack(side="left", padx=20, pady=5)
         site_add_button = tk.Button(self.site_frame, text="Add", **button_config, command=self.on_site_add)
         site_add_button.pack(**button_pack_config)
         site_cancel_button = tk.Button(self.site_frame, text="Cancel", **button_config, command=self.on_site_cancel)
@@ -98,7 +98,10 @@ class AnimeWatchListGUI(GuiUtils):
             body_frame.grid_propagate(False)
             self.on_add()
             tk.Label(
-                body_frame, text=f"No content found in {self.generator.get_config_filepath()}", bg=SECONDARY_COLOR, font=("calibri", 22)
+                body_frame,
+                text=f"No content found in {self.generator.get_config_filepath()}",
+                bg=SECONDARY_COLOR,
+                font=("calibri", 22),
             ).grid(padx=15, pady=15)
             body_frame.config(width=822, height=300)
             return body_frame, []
@@ -112,7 +115,7 @@ class AnimeWatchListGUI(GuiUtils):
         self.canvas.configure(yscrollcommand=scrollbar.set)
         self.canvas.pack(side="left", fill="both", expand=True, pady=5)
 
-        if len(config) > MAX_ROW_COUNT:
+        if len(config) > MAX_ROW_COUNT - 2:
             scrollbar.pack(side="right", fill="y")
             self.canvas.bind_all("<MouseWheel>", self.on_mousewheel)
 
@@ -189,9 +192,11 @@ class AnimeWatchListGUI(GuiUtils):
             + watch_button.winfo_width()
             + padx * 4
         )
-        self.canvas.config(
-            width=row_width, height=row_height * min(MAX_ROW_COUNT, len(config)), yscrollincrement=row_height
-        )
+        self.row_height = row_height
+        self.site_frame["height"] = row_height
+        self.edit_frame["height"] = row_height
+        self.row_count = min(MAX_ROW_COUNT, len(config), self.row_count)
+        self.canvas.config(width=row_width, height=row_height * self.row_count, yscrollincrement=row_height)
         return body_frame, elements
 
     def update_gui(self, config, elements):
@@ -219,12 +224,18 @@ class AnimeWatchListGUI(GuiUtils):
                 state=state, command=partial(self.on_open_page, i, c["next_ep_url"], update_config=True, close=True)
             )
 
+    def update_canvas_rows(self, diff):
+        if len(self.config) >= MAX_ROW_COUNT and self.row_count + diff <= MAX_ROW_COUNT:
+            self.row_count += diff
+            self.canvas["height"] = self.row_height * self.row_count
+
     def is_valid_url(self, text):
         return text.startswith("http://") or text.startswith("https://") and len(text) >= 12
 
     def on_add(self):
         self.site_entry.delete(0, "end")
-        self.site_frame.grid(row=0, padx=10, pady=10)
+        self.site_frame.grid(row=0, padx=10, pady=15)
+        self.update_canvas_rows(-1)
         try:
             clipboard = self.root.clipboard_get()
         except:
@@ -240,6 +251,7 @@ class AnimeWatchListGUI(GuiUtils):
         self.on_site_cancel()
 
     def on_site_cancel(self):
+        self.update_canvas_rows(1)
         self.site_frame.grid_forget()
 
     def on_edit_save(self):
@@ -256,6 +268,7 @@ class AnimeWatchListGUI(GuiUtils):
         self.on_edit_cancel()
 
     def on_edit_cancel(self):
+        self.update_canvas_rows(1)
         self.edit_frame.grid_forget()
         for e in self.elements:
             e["ep_entry"].grid_forget()
@@ -266,6 +279,7 @@ class AnimeWatchListGUI(GuiUtils):
             e["marked_for_deletion"] = False
 
     def on_reload(self):
+        self.row_count = sys.maxsize
         body_frame, elements = self.create_body_frame(self.generator.get_skeleton_config())
         body_frame.grid(row=1)
         self.body_frame.destroy()
@@ -315,6 +329,7 @@ class AnimeWatchListGUI(GuiUtils):
         if not self.elements:
             return
         self.edit_frame.grid(row=2, pady=20)
+        self.update_canvas_rows(-1)
         for i, e in enumerate(self.elements):
             e["ep_entry"].delete(0, "end")
             e["ep_entry"].insert(0, self.config[i]["ep"])
