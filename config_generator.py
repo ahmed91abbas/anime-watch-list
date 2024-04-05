@@ -305,6 +305,8 @@ class ConfigGenerator:
     def save_cache(self):
         result = {}
         for e in self.config:
+            if e["status"] == self.STATUSES["failed"]:
+                continue
             key = self.get_cache_key(e["current_ep_url"])
             result[key] = {
                 "title": e["title"],
