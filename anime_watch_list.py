@@ -230,7 +230,7 @@ class AnimeWatchListGUI(GuiUtils):
             self.canvas["height"] = self.row_height * self.row_count
 
     def is_valid_url(self, text):
-        return text.startswith("http://") or text.startswith("https://") and len(text) >= 12
+        return isinstance(text, str) and len(text) >= 12 and (text.startswith("http://") or text.startswith("https://"))
 
     def on_add(self):
         self.site_entry.delete(0, "end")

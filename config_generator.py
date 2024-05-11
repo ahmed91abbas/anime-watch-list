@@ -39,12 +39,13 @@ class ConfigGenerator:
             "episodes": None,
             "image": {"url": "", "base64_data": self.get_image_base64_data(None)},
         }
-        url_reg = f"https:\/\/.*(?!{'|'.join(ALLOWED_DOMAINS)}).*.[a-z]+"
+        url_reg = f"https:\/\/.*(?:{'|'.join(ALLOWED_DOMAINS)}).*.[a-z]+"
         self.url_category_reg = re.compile(f"^{url_reg}/(category/)")
         self.url_reg = re.compile(f"^{url_reg}/.*-episode-(\\d+(-\\d+)?)$")
         self.cache_key_sub_reg = re.compile("-episode-\\d+(-\\d+)?")
         self.title_parentheses_reg = re.compile(r" (\(.*\))$")
         self.title_special_chars_reg = re.compile(r"[^\w\s\-_]")
+        self.general_episode_reg = re.compile(r"https://.*-(episode|ep)-(\d+)")
         self.config_filepath = os.path.join(CONFIG_DIR, config_filename)
         self.cache_filepath = os.path.join(CONFIG_DIR, cache_filename)
         self.config = []
@@ -104,6 +105,7 @@ class ConfigGenerator:
         next_ep_url_from_cache = details.get("next_ep_url")
         category_match = re.match(self.url_category_reg, url)
         episode_match = re.match(self.url_reg, url)
+        general_episode_match = re.match(self.general_episode_reg, url)
         update_method = None
         if category_match:
             update_method = self.update_with_category_page_info
@@ -111,6 +113,14 @@ class ConfigGenerator:
         elif episode_match:
             update_method = self.update_with_episode_page_info
             details["ep"] = episode_match.group(1)
+        elif general_episode_match:
+            ep_text = general_episode_match.group(1)
+            ep_number = general_episode_match.group(2)
+            details["ep"] = ep_number
+            details["next_ep_url"] = url.replace(f"-{ep_text}-{ep_number}", f"-{ep_text}-{int(ep_number) + 1}")
+            details["title"] = url.rstrip("/").split("/")[-1]
+            details["image"]["base64_data"] = self.get_default_image_base64_data()
+            return {**self.base_info, **details}
         else:
             details = self.get_unsupported_url_info(url, self.STATUSES["unsupported_url"])
             return {**self.base_info, **details}
@@ -197,18 +207,18 @@ class ConfigGenerator:
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
 
     def get_image_base64_data(self, url):
-        raw_data = ""
         if url:
             try:
                 encoded_url = self.encode_url(url)
                 req = Request(encoded_url, headers={"User-Agent": "Mozilla/5.0"})
-                raw_data = urlopen(req).read()
+                return base64.b64encode(urlopen(req).read()).decode("utf-8")
             except:
                 pass
-        if not raw_data:
-            with open(self.resource_path(os.path.join("images", "image-not-found.png")), "rb") as f:
-                raw_data = f.read()
-        return base64.b64encode(raw_data).decode("utf-8")
+        return self.get_default_image_base64_data()
+
+    def get_default_image_base64_data(self):
+        with open(self.resource_path(os.path.join("images", "image-not-found.png")), "rb") as f:
+            return base64.b64encode(f.read()).decode("utf-8")
 
     def encode_url(self, url):
         protocol, domain, path, query, fragment = urlsplit(url)
