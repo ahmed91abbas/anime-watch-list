@@ -25,4 +25,4 @@ Build the executable with:
 
         python3 build_executable.py
 
-`Python version used: 3.11.6`
+`Python version used: 3.12.4`

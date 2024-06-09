@@ -217,7 +217,7 @@ class ConfigGenerator:
         return self.get_default_image_base64_data()
 
     def get_default_image_base64_data(self):
-        with open(self.resource_path(os.path.join("images", "image-not-found.png")), "rb") as f:
+        with open(os.path.join("images", "image-not-found.png"), "rb") as f:
             return base64.b64encode(f.read()).decode("utf-8")
 
     def encode_url(self, url):
@@ -302,15 +302,6 @@ class ConfigGenerator:
     def stringify(self, value):
         value = str(value) if value else "-"
         return value if value.startswith("http") else value.capitalize()
-
-    def resource_path(self, relative_path):
-        try:
-            # PyInstaller creates a temp folder and stores path in _MEIPASS
-            base_path = sys._MEIPASS
-        except Exception:
-            base_path = os.path.abspath(".")
-
-        return os.path.join(base_path, relative_path)
 
     def save_cache(self):
         result = {}
