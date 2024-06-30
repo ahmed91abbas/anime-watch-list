@@ -230,7 +230,9 @@ class AnimeWatchListGUI(GuiUtils):
             self.canvas["height"] = self.row_height * self.row_count
 
     def is_valid_url(self, text):
-        return isinstance(text, str) and len(text) >= 12 and (text.startswith("http://") or text.startswith("https://"))
+        return (
+            isinstance(text, str) and len(text) >= 12 and (text.startswith("http://") or text.startswith("https://"))
+        )
 
     def on_add(self):
         self.site_entry.delete(0, "end")
@@ -296,9 +298,7 @@ class AnimeWatchListGUI(GuiUtils):
         self.generator.remove_cache()
 
     def on_close(self):
-        geometry = self.root.geometry()
-        self.settings["geometry"] = geometry[geometry.index("+") :]
-        self.save_settings()
+        self.set_geometry(self.root.geometry())
         self.root.destroy()
 
     def on_mousewheel(self, event):

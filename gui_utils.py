@@ -19,7 +19,16 @@ class GuiUtils:
 
         return wrapper
 
+    def persist_settings(func):
+        def wrapper(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            self.save_settings()
+
+        return wrapper
+
     def read_settings(self):
+        if not os.path.exists(self.settings_filepath):
+            return {}
         with open(self.settings_filepath, "r") as f:
             return json.load(f)
 
@@ -41,6 +50,10 @@ class GuiUtils:
                     geometry = f"+{m.width // 4}+{m.height // 4}"
         self.settings["geometry"] = geometry
         return geometry
+
+    @persist_settings
+    def set_geometry(self, root_geometry):
+        self.settings["geometry"] = root_geometry[root_geometry.index("+") :]
 
     def add_icon(self, root):
         icon_img = ImageTk.PhotoImage(file=os.path.join("images", "icon.ico"))

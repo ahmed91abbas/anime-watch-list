@@ -105,9 +105,7 @@ class AdditionalInfoGUI(GuiUtils):
         self.top.title("Additional information")
 
     def on_close(self):
-        geometry = self.top.geometry()
-        self.settings["geometry"] = geometry[geometry.index("+") :]
-        self.save_settings()
+        self.set_geometry(self.top.geometry())
         self.top.destroy()
 
     def mainloop(self):
