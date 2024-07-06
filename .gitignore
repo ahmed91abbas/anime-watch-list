@@ -6,3 +6,4 @@ build
 anime_watch_list.spec
 .vscode
 cache.json
+configs/*.json

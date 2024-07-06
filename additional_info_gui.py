@@ -28,7 +28,7 @@ class AdditionalInfoGUI(GuiUtils):
         self.mainloop()
 
     def create_gui(self):
-        bg_color = "#e6e6ff"
+        bg_color = self.get_bg_color()
         title_font = ("calibri", 16)
         self.top = tk.Toplevel(bg=bg_color)
         self.top.geometry(self.get_geometry())

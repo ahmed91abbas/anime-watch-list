@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import os
+from copy import deepcopy
 
 from PIL import Image, ImageTk
 from screeninfo import get_monitors
@@ -10,11 +11,23 @@ from screeninfo import get_monitors
 class GuiUtils:
     def __init__(self, filepath):
         self.settings_filepath = os.path.join("configs", f"{os.path.splitext(os.path.basename(filepath))[0]}.json")
-        self.settings = None
+        self.settings = {}
+        self.defaults = {
+            "background_color": "#e6e6ff",
+            "secondary_background_color": "#b28fc7",
+            "button_color": "#f7e4d0",
+            "max_rows": 8,
+        }
+
+    def reset_settings(self):
+        if os.path.exists(self.settings_filepath):
+            os.remove(self.settings_filepath)
+        self.settings = deepcopy(self.defaults)
 
     def load_settings(func):
         def wrapper(self, *args, **kwargs):
             self.settings = self.settings if self.settings else self.read_settings()
+            self.settings = {**self.defaults, **self.settings}
             return func(self, *args, **kwargs)
 
         return wrapper
@@ -54,6 +67,38 @@ class GuiUtils:
     @persist_settings
     def set_geometry(self, root_geometry):
         self.settings["geometry"] = root_geometry[root_geometry.index("+") :]
+
+    @load_settings
+    def get_bg_color(self):
+        return self.settings["background_color"]
+
+    @persist_settings
+    def set_bg_color(self, background_color):
+        self.settings["background_color"] = background_color
+
+    @load_settings
+    def get_secondary_bg_color(self):
+        return self.settings["secondary_background_color"]
+
+    @persist_settings
+    def set_secondary_bg_color(self, secondary_background_color):
+        self.settings["secondary_background_color"] = secondary_background_color
+
+    @load_settings
+    def get_button_color(self):
+        return self.settings["button_color"]
+
+    @persist_settings
+    def set_button_color(self, button_color):
+        self.settings["button_color"] = button_color
+
+    @load_settings
+    def get_max_rows(self):
+        return self.settings["max_rows"]
+
+    @persist_settings
+    def set_max_rows(self, max_rows):
+        self.settings["max_rows"] = max_rows
 
     def add_icon(self, root):
         icon_img = ImageTk.PhotoImage(file=os.path.join("images", "icon.ico"))
