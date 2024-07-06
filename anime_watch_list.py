@@ -76,6 +76,7 @@ class AnimeWatchListGUI(GuiUtils):
             label="Open in Github",
             command=partial(self.on_open_page, 0, "https://github.com/ahmed91abbas/anime-watch-list"),
         )
+        options_menu.add_command(label="Restore defaults", command=self.on_restore_defaults)
         options_menu.add_command(label="Settings", command=self.on_settings)
 
         button_config = {
@@ -393,7 +394,11 @@ class AnimeWatchListGUI(GuiUtils):
             self.components_methods["background_color"].append((element["remove_button"].config, "activebackground"))
             self.components_methods["button_color"].append((element["watch_button"].config, "bg"))
             self.components_methods["button_color"].append((element["remove_button"].config, "bg"))
-        SettingsGUI(self)
+        self.settings_gui = SettingsGUI(self)
+
+    def on_restore_defaults(self):
+        self.restore_defaults()
+        self.on_reload()
 
     def mainloop(self):
         tk.mainloop()

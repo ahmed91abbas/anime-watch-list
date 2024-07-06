@@ -40,12 +40,13 @@ class SettingsGUI(GuiUtils):
 
     def choose_bg_color(self):
         _, self.background_color = colorchooser.askcolor(title="Choose background color")
-
-    def on_apply(self):
         if self.background_color:
             self.caller.set_bg_color(self.background_color)
             for method, key in self.caller.components_methods["background_color"]:
                 method(**{key: self.background_color})
+
+    def on_apply(self):
+        pass
 
     def on_close(self):
         self.set_geometry(self.top.geometry())

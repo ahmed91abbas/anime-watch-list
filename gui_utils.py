@@ -14,7 +14,7 @@ class GuiUtils:
         self.settings = {}
         self.defaults = defaults
 
-    def reset_settings(self):
+    def restore_defaults(self):
         if os.path.exists(self.settings_filepath):
             os.remove(self.settings_filepath)
         self.settings = deepcopy(self.defaults)
