@@ -8,7 +8,8 @@ from gui_utils import GuiUtils
 
 class AdditionalInfoGUI(GuiUtils):
     def __init__(self, title, base64_image_data):
-        super().__init__(__file__)
+        defaults = {"background_color": "#e6e6ff"}
+        super().__init__(__file__, defaults)
         self.generator = ConfigGenerator()
         self.title = title
         self.base64_image_data = base64_image_data

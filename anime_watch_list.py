@@ -10,11 +10,23 @@ from tkinter import messagebox
 from additional_info_gui import AdditionalInfoGUI
 from config_generator import ConfigGenerator
 from gui_utils import GuiUtils
+from settings_gui import SettingsGUI
 
 
 class AnimeWatchListGUI(GuiUtils):
     def __init__(self):
-        super().__init__(__file__)
+        self.defaults = {
+            "background_color": "#e6e6ff",
+            "secondary_background_color": "#b28fc7",
+            "button_color": "#f7e4d0",
+            "max_rows": 8,
+        }
+        super().__init__(__file__, self.defaults)
+        self.components_methods = {
+            "background_color": [],
+            "secondary_background_color": [],
+            "button_color": [],
+        }
         self.generator = ConfigGenerator()
         self.run()
 
@@ -44,6 +56,7 @@ class AnimeWatchListGUI(GuiUtils):
     def create_gui(self):
         self.root = tk.Tk()
         self.root.configure(background=self.secondary_bg_color)
+        self.components_methods["secondary_background_color"].append((self.root.configure, "background"))
         self.root.title("Anime Watch List")
         self.root.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.resizable(False, False)
@@ -63,6 +76,7 @@ class AnimeWatchListGUI(GuiUtils):
             label="Open in Github",
             command=partial(self.on_open_page, 0, "https://github.com/ahmed91abbas/anime-watch-list"),
         )
+        options_menu.add_command(label="Settings", command=self.on_settings)
 
         button_config = {
             "font": ("calibri", 12),
@@ -75,39 +89,55 @@ class AnimeWatchListGUI(GuiUtils):
         }
         button_pack_config = {"side": "left", "padx": 5, "pady": 5}
         self.site_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
+        self.components_methods["secondary_background_color"].append((self.site_frame.config, "bg"))
         self.site_entry = tk.Entry(self.site_frame, width=60, bg=self.bg_color, font=("calibri", 12))
+        self.components_methods["background_color"].append((self.site_entry.config, "bg"))
         self.site_entry.pack(side="left", padx=20, pady=5)
         site_add_button = tk.Button(self.site_frame, text="Add", **button_config, command=self.on_site_add)
+        self.components_methods["background_color"].append((site_add_button.config, "activebackground"))
+        self.components_methods["button_color"].append((site_add_button.config, "bg"))
         site_add_button.pack(**button_pack_config)
         site_cancel_button = tk.Button(self.site_frame, text="Cancel", **button_config, command=self.on_site_cancel)
+        self.components_methods["background_color"].append((site_cancel_button.config, "activebackground"))
+        self.components_methods["button_color"].append((site_cancel_button.config, "bg"))
         site_cancel_button.pack(**button_pack_config)
 
         self.edit_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
+        self.components_methods["secondary_background_color"].append((self.edit_frame.config, "bg"))
         button_pack_config = {"side": "left", "padx": 15}
         save_button = tk.Button(self.edit_frame, text="Save", **button_config, command=self.on_edit_save)
+        self.components_methods["background_color"].append((save_button.config, "activebackground"))
+        self.components_methods["button_color"].append((save_button.config, "bg"))
         save_button.pack(**button_pack_config)
         edit_cancel_button = tk.Button(self.edit_frame, text="Cancel", **button_config, command=self.on_edit_cancel)
+        self.components_methods["background_color"].append((edit_cancel_button.config, "activebackground"))
+        self.components_methods["button_color"].append((edit_cancel_button.config, "bg"))
         edit_cancel_button.pack(**button_pack_config)
         self.body_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
+        self.components_methods["secondary_background_color"].append((self.body_frame.config, "bg"))
 
     def create_body_frame(self, config):
         body_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
+        self.components_methods["secondary_background_color"].append((body_frame.config, "bg"))
 
         if not config:
             body_frame.grid_propagate(False)
             self.on_add()
-            tk.Label(
+            label = tk.Label(
                 body_frame,
                 text=f"No content found in {self.generator.get_config_filepath()}",
                 bg=self.secondary_bg_color,
                 font=("calibri", 22),
-            ).grid(padx=15, pady=15)
+            )
+            self.components_methods["secondary_background_color"].append((label.config, "bg"))
+            label.grid(padx=15, pady=15)
             body_frame.config(width=822, height=300)
             return body_frame, []
 
         self.canvas = tk.Canvas(body_frame, bd=0, highlightthickness=0)
         scrollbar = tk.Scrollbar(body_frame, orient="vertical", command=self.canvas.yview)
         scrollable_frame = tk.Frame(self.canvas, bg=self.secondary_bg_color)
+        self.components_methods["secondary_background_color"].append((scrollable_frame.config, "bg"))
         self.canvas.grid_propagate(False)
         scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
@@ -286,6 +316,10 @@ class AnimeWatchListGUI(GuiUtils):
             e["marked_for_deletion"] = False
 
     def on_reload(self):
+        self.bg_color = self.get_bg_color()
+        self.secondary_bg_color = self.get_secondary_bg_color()
+        self.button_color = self.get_button_color()
+        self.max_rows = self.get_max_rows()
         self.row_count = sys.maxsize
         body_frame, elements = self.create_body_frame(self.generator.get_skeleton_config())
         body_frame.grid(row=1)
@@ -350,6 +384,16 @@ class AnimeWatchListGUI(GuiUtils):
 
     def on_image_button(self, index):
         AdditionalInfoGUI(self.config[index]["title"], self.config[index]["image"]["base64_data"])
+
+    def on_settings(self):
+        for element in self.elements:
+            self.components_methods["background_color"].append((element["title_button"].config, "bg"))
+            self.components_methods["background_color"].append((element["ep_button"].config, "bg"))
+            self.components_methods["background_color"].append((element["watch_button"].config, "activebackground"))
+            self.components_methods["background_color"].append((element["remove_button"].config, "activebackground"))
+            self.components_methods["button_color"].append((element["watch_button"].config, "bg"))
+            self.components_methods["button_color"].append((element["remove_button"].config, "bg"))
+        SettingsGUI(self)
 
     def mainloop(self):
         tk.mainloop()

@@ -9,15 +9,10 @@ from screeninfo import get_monitors
 
 
 class GuiUtils:
-    def __init__(self, filepath):
+    def __init__(self, filepath, defaults):
         self.settings_filepath = os.path.join("configs", f"{os.path.splitext(os.path.basename(filepath))[0]}.json")
         self.settings = {}
-        self.defaults = {
-            "background_color": "#e6e6ff",
-            "secondary_background_color": "#b28fc7",
-            "button_color": "#f7e4d0",
-            "max_rows": 8,
-        }
+        self.defaults = defaults
 
     def reset_settings(self):
         if os.path.exists(self.settings_filepath):
