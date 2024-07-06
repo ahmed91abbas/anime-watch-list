@@ -33,17 +33,33 @@ class SettingsGUI(GuiUtils):
         self.title_text.pack(pady=10)
 
         pady = 15
-        color_button = tk.Button(self.body_frame, text="Change background color", command=self.choose_bg_color)
-        color_button.pack(pady=pady)
-        apply_button = tk.Button(self.body_frame, text="Apply", command=self.on_apply)
-        apply_button.pack(pady=pady)
+        tk.Button(self.body_frame, text="Change background color", command=self.choose_bg_color).pack(pady=pady)
+        tk.Button(
+            self.body_frame, text="Change secondary background color", command=self.choose_secondary_bg_color
+        ).pack(pady=pady)
+        tk.Button(self.body_frame, text="Change button color", command=self.choose_button_color).pack(pady=pady)
+        tk.Button(self.body_frame, text="Apply", command=self.on_apply).pack(pady=pady)
 
     def choose_bg_color(self):
-        _, self.background_color = colorchooser.askcolor(title="Choose background color")
-        if self.background_color:
-            self.caller.set_bg_color(self.background_color)
+        _, color_code = colorchooser.askcolor(title="Choose background color")
+        if color_code:
+            self.caller.set_bg_color(color_code)
             for method, key in self.caller.components_methods["background_color"]:
-                method(**{key: self.background_color})
+                method(**{key: color_code})
+
+    def choose_secondary_bg_color(self):
+        _, color_code = colorchooser.askcolor(title="Choose secondary background color")
+        if color_code:
+            self.caller.set_secondary_bg_color(color_code)
+            for method, key in self.caller.components_methods["secondary_background_color"]:
+                method(**{key: color_code})
+
+    def choose_button_color(self):
+        _, color_code = colorchooser.askcolor(title="Choose button color")
+        if color_code:
+            self.caller.set_button_color(color_code)
+            for method, key in self.caller.components_methods["button_color"]:
+                method(**{key: color_code})
 
     def on_apply(self):
         pass

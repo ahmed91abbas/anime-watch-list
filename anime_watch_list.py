@@ -115,11 +115,9 @@ class AnimeWatchListGUI(GuiUtils):
         self.components_methods["button_color"].append((edit_cancel_button.config, "bg"))
         edit_cancel_button.pack(**button_pack_config)
         self.body_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
-        self.components_methods["secondary_background_color"].append((self.body_frame.config, "bg"))
 
     def create_body_frame(self, config):
         body_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
-        self.components_methods["secondary_background_color"].append((body_frame.config, "bg"))
 
         if not config:
             body_frame.grid_propagate(False)
@@ -130,7 +128,6 @@ class AnimeWatchListGUI(GuiUtils):
                 bg=self.secondary_bg_color,
                 font=("calibri", 22),
             )
-            self.components_methods["secondary_background_color"].append((label.config, "bg"))
             label.grid(padx=15, pady=15)
             body_frame.config(width=822, height=300)
             return body_frame, []
@@ -394,6 +391,7 @@ class AnimeWatchListGUI(GuiUtils):
             self.components_methods["background_color"].append((element["remove_button"].config, "activebackground"))
             self.components_methods["button_color"].append((element["watch_button"].config, "bg"))
             self.components_methods["button_color"].append((element["remove_button"].config, "bg"))
+            self.components_methods["secondary_background_color"].append((self.body_frame.config, "bg"))
         self.settings_gui = SettingsGUI(self)
 
     def on_restore_defaults(self):
