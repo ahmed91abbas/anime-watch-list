@@ -47,12 +47,18 @@ class SettingsGUI(GuiUtils):
             self.body_frame, bg=self.caller.get_secondary_bg_color(), **display_config
         )
         self.sec_bg_color_display.grid(row=1, column=1, padx=padx, pady=pady)
-        button_color_button = tk.Button(
+        text_color_button = tk.Button(
             self.body_frame, text="Change button color", command=self.choose_button_color, **button_config
         )
-        button_color_button.grid(row=2, column=0, padx=padx, pady=pady)
+        text_color_button.grid(row=2, column=0, padx=padx, pady=pady)
         self.button_color_display = tk.Label(self.body_frame, bg=self.caller.get_button_color(), **display_config)
         self.button_color_display.grid(row=2, column=1, padx=padx, pady=pady)
+        text_color_button = tk.Button(
+            self.body_frame, text="Change text color", command=self.choose_text_color, **button_config
+        )
+        text_color_button.grid(row=3, column=0, padx=padx, pady=pady)
+        self.button_color_display = tk.Label(self.body_frame, bg=self.caller.get_text_color(), **display_config)
+        self.button_color_display.grid(row=3, column=1, padx=padx, pady=pady)
 
     def choose_bg_color(self):
         _, color_code = colorchooser.askcolor(title="Choose background color")
@@ -77,6 +83,14 @@ class SettingsGUI(GuiUtils):
                 method(**{key: color_code})
             self.button_color_display.config(bg=color_code)
             self.caller.set_button_color(color_code)
+
+    def choose_text_color(self):
+        _, color_code = colorchooser.askcolor(title="Choose text color")
+        if color_code:
+            for method, key in self.caller.components_methods["text_color"]:
+                method(**{key: color_code})
+            self.button_color_display.config(bg=color_code)
+            self.caller.set_text_color(color_code)
 
     def on_apply(self):
         pass

@@ -19,6 +19,7 @@ class AnimeWatchListGUI(GuiUtils):
             "background_color": "#e6e6ff",
             "secondary_background_color": "#b28fc7",
             "button_color": "#f7e4d0",
+            "text_color": "#000000",
             "max_rows": 8,
         }
         super().__init__(__file__, self.defaults)
@@ -26,6 +27,7 @@ class AnimeWatchListGUI(GuiUtils):
             "background_color": [],
             "secondary_background_color": [],
             "button_color": [],
+            "text_color": [],
         }
         self.generator = ConfigGenerator()
         self.run()
@@ -34,6 +36,7 @@ class AnimeWatchListGUI(GuiUtils):
         self.bg_color = self.get_bg_color()
         self.secondary_bg_color = self.get_secondary_bg_color()
         self.button_color = self.get_button_color()
+        self.text_color = self.get_text_color()
         self.max_rows = self.get_max_rows()
         self.create_gui()
         self.on_reload()
@@ -84,6 +87,7 @@ class AnimeWatchListGUI(GuiUtils):
             "width": 10,
             "height": 1,
             "bg": self.button_color,
+            "fg": self.text_color,
             "activebackground": self.bg_color,
             "compound": tk.CENTER,
             "highlightthickness": 2,
@@ -91,16 +95,20 @@ class AnimeWatchListGUI(GuiUtils):
         button_pack_config = {"side": "left", "padx": 5, "pady": 5}
         self.site_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
         self.components_methods["secondary_background_color"].append((self.site_frame.config, "bg"))
-        self.site_entry = tk.Entry(self.site_frame, width=60, bg=self.bg_color, font=("calibri", 12))
+        self.site_entry = tk.Entry(
+            self.site_frame, width=60, bg=self.bg_color, fg=self.text_color, font=("calibri", 12)
+        )
         self.components_methods["background_color"].append((self.site_entry.config, "bg"))
         self.site_entry.pack(side="left", padx=20, pady=5)
         site_add_button = tk.Button(self.site_frame, text="Add", **button_config, command=self.on_site_add)
         self.components_methods["background_color"].append((site_add_button.config, "activebackground"))
         self.components_methods["button_color"].append((site_add_button.config, "bg"))
+        self.components_methods["text_color"].append((site_add_button.config, "fg"))
         site_add_button.pack(**button_pack_config)
         site_cancel_button = tk.Button(self.site_frame, text="Cancel", **button_config, command=self.on_site_cancel)
         self.components_methods["background_color"].append((site_cancel_button.config, "activebackground"))
         self.components_methods["button_color"].append((site_cancel_button.config, "bg"))
+        self.components_methods["text_color"].append((site_cancel_button.config, "fg"))
         site_cancel_button.pack(**button_pack_config)
 
         self.edit_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
@@ -109,10 +117,12 @@ class AnimeWatchListGUI(GuiUtils):
         save_button = tk.Button(self.edit_frame, text="Save", **button_config, command=self.on_edit_save)
         self.components_methods["background_color"].append((save_button.config, "activebackground"))
         self.components_methods["button_color"].append((save_button.config, "bg"))
+        self.components_methods["text_color"].append((save_button.config, "fg"))
         save_button.pack(**button_pack_config)
         edit_cancel_button = tk.Button(self.edit_frame, text="Cancel", **button_config, command=self.on_edit_cancel)
         self.components_methods["background_color"].append((edit_cancel_button.config, "activebackground"))
         self.components_methods["button_color"].append((edit_cancel_button.config, "bg"))
+        self.components_methods["text_color"].append((edit_cancel_button.config, "fg"))
         edit_cancel_button.pack(**button_pack_config)
         self.body_frame = tk.Frame(self.root, bg=self.secondary_bg_color)
 
@@ -152,6 +162,7 @@ class AnimeWatchListGUI(GuiUtils):
         component_config = {
             "height": 2,
             "bg": self.bg_color,
+            "fg": self.text_color,
             "font": ("calibri", 16),
             "highlightthickness": 0,
             "border": 0,
@@ -183,11 +194,12 @@ class AnimeWatchListGUI(GuiUtils):
             ep_button.grid(**grid_config, column=2)
             element["ep_button"] = ep_button
 
-            ep_entry = tk.Entry(scrollable_frame, width=3, font=component_config["font"])
+            ep_entry = tk.Entry(scrollable_frame, width=3, font=component_config["font"], fg=self.text_color)
             element["ep_entry"] = ep_entry
 
             main_button_config = {
                 "bg": self.button_color,
+                "fg": self.text_color,
                 "activebackground": self.bg_color,
                 "compound": tk.CENTER,
                 "highlightthickness": 2,
@@ -392,6 +404,12 @@ class AnimeWatchListGUI(GuiUtils):
             self.components_methods["button_color"].append((element["watch_button"].config, "bg"))
             self.components_methods["button_color"].append((element["remove_button"].config, "bg"))
             self.components_methods["secondary_background_color"].append((self.body_frame.config, "bg"))
+            self.components_methods["text_color"].append((element["title_button"].config, "fg"))
+            self.components_methods["text_color"].append((element["ep_button"].config, "fg"))
+            self.components_methods["text_color"].append((element["watch_button"].config, "fg"))
+            self.components_methods["text_color"].append((element["remove_button"].config, "fg"))
+            self.components_methods["text_color"].append((element["ep_entry"].config, "fg"))
+
         self.settings_gui = SettingsGUI(self)
 
     def on_restore_defaults(self):

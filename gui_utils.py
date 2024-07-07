@@ -88,6 +88,14 @@ class GuiUtils:
         self.settings["button_color"] = button_color
 
     @load_settings
+    def get_text_color(self):
+        return self.settings["text_color"]
+
+    @persist_settings
+    def set_text_color(self, text_color):
+        self.settings["text_color"] = text_color
+
+    @load_settings
     def get_max_rows(self):
         return self.settings["max_rows"]
 
