@@ -8,8 +8,7 @@ from gui_utils import GuiUtils
 
 class AdditionalInfoGUI(GuiUtils):
     def __init__(self, title, base64_image_data):
-        defaults = {"background_color": "#e6e6ff"}
-        super().__init__(__file__, defaults)
+        super().__init__(__file__)
         self.generator = ConfigGenerator()
         self.title = title
         self.base64_image_data = base64_image_data
@@ -29,7 +28,8 @@ class AdditionalInfoGUI(GuiUtils):
         self.mainloop()
 
     def create_gui(self):
-        bg_color = self.get_bg_color()
+        bg_color = self.get_color("background_color")
+        text_color = self.get_color("text_color")
         title_font = ("calibri", 16)
         self.top = tk.Toplevel(bg=bg_color)
         self.top.geometry(self.get_geometry())
@@ -43,7 +43,9 @@ class AdditionalInfoGUI(GuiUtils):
         header_frame.pack()
         body_frame.pack()
 
-        self.title_text = tk.Text(header_frame, wrap="word", height=2, bd=0, font=title_font, bg=bg_color)
+        self.title_text = tk.Text(
+            header_frame, wrap="word", height=2, bd=0, font=title_font, bg=bg_color, fg=text_color
+        )
         self.replace_widget_text(self.title_text, f"{self.title}\n-")
         self.title_text.pack(pady=10)
 
@@ -63,7 +65,13 @@ class AdditionalInfoGUI(GuiUtils):
 
         first_column_width = max([len(title) for title in self.info_titles]) + 2
         second_column_width = 40
-        label_text_config = {"bg": bg_color, "font": ("calibri", 13), "borderwidth": 2, "relief": "groove"}
+        label_text_config = {
+            "bg": bg_color,
+            "fg": text_color,
+            "font": ("calibri", 13),
+            "borderwidth": 2,
+            "relief": "groove",
+        }
         label_grid_config = {"sticky": "w"}
         self.text_widgets_dict = dict()
         for i, info_title in enumerate(self.info_titles):
@@ -83,6 +91,7 @@ class AdditionalInfoGUI(GuiUtils):
             width=width,
             height=height,
             bg=bg_color,
+            fg=text_color,
             highlightthickness=0,
             borderwidth=0,
         )
@@ -97,7 +106,7 @@ class AdditionalInfoGUI(GuiUtils):
             text_widget = self.text_widgets_dict[info_title]
             value = str(info.get(info_title.lower(), "-"))
             self.replace_widget_text(text_widget, value)
-            if info_title == "Url":
+            if info_title == "Url" and value != "-":
                 url = value
                 text_widget.bind("<ButtonRelease-1>", lambda e: webbrowser.open(url, new=0, autoraise=True))
                 text_widget.config(fg="blue", cursor="hand2")

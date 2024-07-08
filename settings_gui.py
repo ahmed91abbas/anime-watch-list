@@ -1,21 +1,25 @@
 import tkinter as tk
+from copy import deepcopy
+from functools import partial
 from tkinter import colorchooser
 
 from gui_utils import GuiUtils
 
 
 class SettingsGUI(GuiUtils):
-    def __init__(self, caller):
-        defaults = {"background_color": "#e6e6ff", "button_color": "#f7e4d0"}
-        super().__init__(__file__, defaults)
-        self.background_color = None
-        self.caller = caller
+    def __init__(self, caller_components_methods):
+        super().__init__(__file__)
+        self.caller_components_methods = caller_components_methods
+        self.components_methods = {key: [] for key in self.theme_color_keys}
         self.create_gui()
         self.mainloop()
 
     def create_gui(self):
-        bg_color = self.get_bg_color()
-        self.top = tk.Toplevel(bg=bg_color)
+        sec_bg_color = self.get_color("secondary_background_color")
+        text_color = self.get_color("text_color")
+        font = ("calibri", 12)
+        self.top = tk.Toplevel(bg=sec_bg_color)
+        self.components_methods["secondary_background_color"].append((self.top.config, "bg"))
         self.add_icon(self.top)
         self.top.geometry(self.get_geometry())
         self.top.title("Settings")
@@ -23,77 +27,76 @@ class SettingsGUI(GuiUtils):
         self.top.resizable(False, False)
         self.top.focus()
 
-        self.body_frame = tk.Frame(self.top, bg=bg_color)
+        self.header_frame = tk.Frame(self.top, bg=sec_bg_color)
+        self.components_methods["secondary_background_color"].append((self.header_frame.config, "bg"))
+        self.header_frame.pack(padx=20, pady=20)
+        self.body_frame = tk.Frame(self.top, bg=sec_bg_color)
+        self.components_methods["secondary_background_color"].append((self.body_frame.config, "bg"))
         self.body_frame.pack(padx=20, pady=20)
+
+        self.theme_var = tk.StringVar(self.top)
+        self.theme_var.set(self.get_current_theme())
+        self.theme_var.trace_add("write", self.on_theme_change)
+        theme_label = tk.Label(self.header_frame, text="Select theme: ", bg=sec_bg_color, fg=text_color, font=font)
+        self.components_methods["secondary_background_color"].append((theme_label.config, "bg"))
+        self.components_methods["text_color"].append((theme_label.config, "fg"))
+        theme_dropdown = tk.OptionMenu(self.header_frame, self.theme_var, *self.get_available_themes())
+        menu_config = {"bg": self.get_color("background_color"), "fg": text_color, "font": font}
+        theme_dropdown.config(width=20, **menu_config)
+        self.components_methods["background_color"].append((theme_dropdown.config, "bg"))
+        self.components_methods["text_color"].append((theme_dropdown.config, "fg"))
+        theme_dropdown["menu"].config(**menu_config)
+        self.components_methods["background_color"].append((theme_dropdown["menu"].config, "bg"))
+        self.components_methods["text_color"].append((theme_dropdown["menu"].config, "fg"))
+        self.components_methods["background_color"].append((theme_dropdown["menu"].config, "bg"))
+        self.components_methods["text_color"].append((theme_dropdown["menu"].config, "fg"))
+        theme_dropdown.pack(side="right")
+        theme_label.pack(side="right")
 
         padx = 5
         pady = 5
-        button_config = {"width": 30, "height": 2, "font": ("calibri", 12), "bg": self.get_button_color()}
+        button_config = {
+            "width": 30,
+            "height": 2,
+            "font": font,
+            "bg": self.get_color("button_color"),
+            "fg": text_color,
+        }
         display_config = {"width": 7, "height": 3, "relief": "solid"}
-        bg_color_button = tk.Button(
-            self.body_frame, text="Change background color", command=self.choose_bg_color, **button_config
-        )
-        bg_color_button.grid(row=0, column=0, padx=padx, pady=pady)
-        self.bg_color_display = tk.Label(self.body_frame, bg=self.caller.get_bg_color(), **display_config)
-        self.bg_color_display.grid(row=0, column=1, padx=padx, pady=pady)
-        sec_bg_color_button = tk.Button(
-            self.body_frame,
-            text="Change secondary background color",
-            command=self.choose_secondary_bg_color,
-            **button_config
-        )
-        sec_bg_color_button.grid(row=1, column=0, padx=padx, pady=pady)
-        self.sec_bg_color_display = tk.Label(
-            self.body_frame, bg=self.caller.get_secondary_bg_color(), **display_config
-        )
-        self.sec_bg_color_display.grid(row=1, column=1, padx=padx, pady=pady)
-        text_color_button = tk.Button(
-            self.body_frame, text="Change button color", command=self.choose_button_color, **button_config
-        )
-        text_color_button.grid(row=2, column=0, padx=padx, pady=pady)
-        self.button_color_display = tk.Label(self.body_frame, bg=self.caller.get_button_color(), **display_config)
-        self.button_color_display.grid(row=2, column=1, padx=padx, pady=pady)
-        text_color_button = tk.Button(
-            self.body_frame, text="Change text color", command=self.choose_text_color, **button_config
-        )
-        text_color_button.grid(row=3, column=0, padx=padx, pady=pady)
-        self.button_color_display = tk.Label(self.body_frame, bg=self.caller.get_text_color(), **display_config)
-        self.button_color_display.grid(row=3, column=1, padx=padx, pady=pady)
+        for i, key in enumerate(self.theme_color_keys):
+            color_display = tk.Label(self.body_frame, bg=self.get_color(key), **display_config)
+            self.components_methods[key].append((color_display.config, "bg"))
+            color_button = tk.Button(
+                self.body_frame,
+                text=f"Change {key.replace('_', ' ')}",
+                command=partial(self.choose_color, key),
+                **button_config,
+            )
+            self.components_methods["button_color"].append((color_button.config, "bg"))
+            self.components_methods["text_color"].append((color_button.config, "fg"))
+            color_button.grid(row=i, column=0, padx=padx, pady=pady)
+            color_display.grid(row=i, column=1, padx=padx, pady=pady)
 
-    def choose_bg_color(self):
-        _, color_code = colorchooser.askcolor(title="Choose background color")
-        if color_code:
-            for method, key in self.caller.components_methods["background_color"]:
-                method(**{key: color_code})
-            self.bg_color_display.config(bg=color_code)
-            self.caller.set_bg_color(color_code)
+    def choose_color(self, color_key):
+        _, color_code = colorchooser.askcolor(title=f"Choose {color_key.replace('_', ' ')}")
+        if not color_code:
+            return
+        for method, arg_key in self.caller_components_methods[color_key] + self.components_methods[color_key]:
+            method(**{arg_key: color_code})
+        current_colors = deepcopy(self.themes_config["themes"][self.current_theme])
+        current_colors[color_key] = color_code
+        self.set_current_theme("custom")
+        for key, color in current_colors.items():
+            self.set_color(color, key)
+        self.theme_var.set("custom")
 
-    def choose_secondary_bg_color(self):
-        _, color_code = colorchooser.askcolor(title="Choose secondary background color")
-        if color_code:
-            for method, key in self.caller.components_methods["secondary_background_color"]:
-                method(**{key: color_code})
-            self.sec_bg_color_display.config(bg=color_code)
-            self.caller.set_secondary_bg_color(color_code)
-
-    def choose_button_color(self):
-        _, color_code = colorchooser.askcolor(title="Choose button color")
-        if color_code:
-            for method, key in self.caller.components_methods["button_color"]:
-                method(**{key: color_code})
-            self.button_color_display.config(bg=color_code)
-            self.caller.set_button_color(color_code)
-
-    def choose_text_color(self):
-        _, color_code = colorchooser.askcolor(title="Choose text color")
-        if color_code:
-            for method, key in self.caller.components_methods["text_color"]:
-                method(**{key: color_code})
-            self.button_color_display.config(bg=color_code)
-            self.caller.set_text_color(color_code)
-
-    def on_apply(self):
-        pass
+    def on_theme_change(self, *args):
+        selected_theme = self.theme_var.get()
+        self.set_current_theme(selected_theme)
+        for key in self.theme_color_keys:
+            color = self.get_color(key)
+            for method, arg_key in self.caller_components_methods[key] + self.components_methods[key]:
+                method(**{arg_key: color})
 
     def on_close(self):
         self.set_geometry(self.top.geometry())
@@ -101,14 +104,6 @@ class SettingsGUI(GuiUtils):
 
     def mainloop(self):
         tk.mainloop()
-
-    def replace_widget_text(self, text_widget, text):
-        text_widget.config(state=tk.NORMAL)
-        text_widget.delete("1.0", "end")
-        text_widget.insert("1.0", text)
-        text_widget.tag_configure("center", justify="center")
-        text_widget.tag_add("center", "1.0", "end")
-        text_widget.config(state=tk.DISABLED)
 
 
 if __name__ == "__main__":

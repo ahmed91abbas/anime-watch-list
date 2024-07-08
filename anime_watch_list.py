@@ -15,28 +15,14 @@ from settings_gui import SettingsGUI
 
 class AnimeWatchListGUI(GuiUtils):
     def __init__(self):
-        self.defaults = {
-            "background_color": "#e6e6ff",
-            "secondary_background_color": "#b28fc7",
-            "button_color": "#f7e4d0",
-            "text_color": "#000000",
-            "max_rows": 8,
-        }
+        self.defaults = {"max_rows": 8}
         super().__init__(__file__, self.defaults)
-        self.components_methods = {
-            "background_color": [],
-            "secondary_background_color": [],
-            "button_color": [],
-            "text_color": [],
-        }
+        self.components_methods = {key: [] for key in self.theme_color_keys}
         self.generator = ConfigGenerator()
         self.run()
 
     def run(self):
-        self.bg_color = self.get_bg_color()
-        self.secondary_bg_color = self.get_secondary_bg_color()
-        self.button_color = self.get_button_color()
-        self.text_color = self.get_text_color()
+        self.load_theme()
         self.max_rows = self.get_max_rows()
         self.create_gui()
         self.on_reload()
@@ -67,7 +53,9 @@ class AnimeWatchListGUI(GuiUtils):
 
         menu = tk.Menu(self.root)
         self.root.config(menu=menu)
-        options_menu = tk.Menu(menu, tearoff=0)
+        options_menu = tk.Menu(menu, tearoff=0, bg=self.bg_color, fg=self.text_color)
+        self.components_methods["background_color"].append((options_menu.config, "bg"))
+        self.components_methods["text_color"].append((options_menu.config, "fg"))
         menu.add_cascade(label="Options", menu=options_menu)
         options_menu.add_command(label="Add to list", command=self.on_add)
         options_menu.add_command(label="Edit", command=self.on_edit)
@@ -79,7 +67,6 @@ class AnimeWatchListGUI(GuiUtils):
             label="Open in Github",
             command=partial(self.on_open_page, 0, "https://github.com/ahmed91abbas/anime-watch-list"),
         )
-        options_menu.add_command(label="Restore defaults", command=self.on_restore_defaults)
         options_menu.add_command(label="Settings", command=self.on_settings)
 
         button_config = {
@@ -326,9 +313,7 @@ class AnimeWatchListGUI(GuiUtils):
             e["marked_for_deletion"] = False
 
     def on_reload(self):
-        self.bg_color = self.get_bg_color()
-        self.secondary_bg_color = self.get_secondary_bg_color()
-        self.button_color = self.get_button_color()
+        self.load_theme()
         self.max_rows = self.get_max_rows()
         self.row_count = sys.maxsize
         body_frame, elements = self.create_body_frame(self.generator.get_skeleton_config())
@@ -337,6 +322,12 @@ class AnimeWatchListGUI(GuiUtils):
         self.body_frame = body_frame
         self.elements = elements
         Thread(target=self.add_config_to_gui, args=(self.elements,)).start()
+
+    def load_theme(self):
+        self.bg_color = self.get_color("background_color")
+        self.secondary_bg_color = self.get_color("secondary_background_color")
+        self.button_color = self.get_color("button_color")
+        self.text_color = self.get_color("text_color")
 
     def on_stats(self):
         stats = self.generator.get_stats()
@@ -410,11 +401,7 @@ class AnimeWatchListGUI(GuiUtils):
             self.components_methods["text_color"].append((element["remove_button"].config, "fg"))
             self.components_methods["text_color"].append((element["ep_entry"].config, "fg"))
 
-        self.settings_gui = SettingsGUI(self)
-
-    def on_restore_defaults(self):
-        self.restore_defaults()
-        self.on_reload()
+        self.settings_gui = SettingsGUI(self.components_methods)
 
     def mainloop(self):
         tk.mainloop()
