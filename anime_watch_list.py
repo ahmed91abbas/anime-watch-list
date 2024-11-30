@@ -249,11 +249,11 @@ class AnimeWatchListGUI(GuiUtils):
                 command=partial(self.on_open_page, i, c["myanimelist_url"]),
             )
             e["ep_button"].config(
-                text=f'#{c["ep"]}', command=partial(self.on_open_page, i, c["current_ep_url"], close=True)
+                text=f'#{c["ep"]}', command=partial(self.on_open_page, i, c["current_url"], close=True)
             )
             state = ("disabled", "normal")[bool(c["next_ep_url"])]
             e["watch_button"].config(
-                state=state, command=partial(self.on_open_page, i, c["next_ep_url"], update_config=True, close=True)
+                state=state, command=partial(self.on_open_page, i, c["next_url"], update_config=True, close=True)
             )
 
     def update_canvas_rows(self, diff):

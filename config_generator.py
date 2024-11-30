@@ -1,45 +1,26 @@
-import base64
 import concurrent.futures
 import json
 import os
 import re
-import sys
 import time
 from datetime import datetime
-from urllib.parse import quote, urlsplit, urlunsplit
-from urllib.request import Request, urlopen
 
 import requests
 from bs4 import BeautifulSoup
 from pytz import timezone
+
+from animeheaven_parser import AnimeheavenParser
+from parser_utils import ParserUtils
 
 ALLOWED_DOMAINS = ["gogoanime", "anitaku"]
 MAX_THREADS = 8
 CONFIG_DIR = "configs"
 
 
-class ConfigGenerator:
+class ConfigGenerator(ParserUtils):
     def __init__(self, config_filename="config.txt", cache_filename="cache.json"):
-        self.STATUSES = {
-            "default": "",
-            "not_aired": "Not yet aired",
-            "unsupported_url": "UNSUPPORTED URL",
-            "failed": "Failed",
-            "finished": "✅",
-        }
-        self.base_info = {
-            "title": "Loading...",
-            "status": "",
-            "current_ep_url": "",
-            "next_ep_url": "",
-            "myanimelist_url": "",
-            "ep": "-1",
-            "loaded_from_cache": False,
-            "weight": 0,
-            "episodes": None,
-            "image": {"url": "", "base64_data": self.get_image_base64_data(None)},
-        }
-        url_reg = f"https:\/\/.*(?:{'|'.join(ALLOWED_DOMAINS)}).*.[a-z]+"
+        super().__init__()
+        url_reg = f"https:\\/\\/.*(?:{'|'.join(ALLOWED_DOMAINS)}).*.[a-z]+"
         self.url_category_reg = re.compile(f"^{url_reg}/(category/)")
         self.url_reg = re.compile(f"^{url_reg}/.*-episode-(\\d+(-\\d+)?)$")
         self.cache_key_sub_reg = re.compile("-episode-\\d+(-\\d+)?")
@@ -81,7 +62,10 @@ class ConfigGenerator:
 
     def get_details(self, url):
         details = self.get_details_from_cache(url)
-        details = self.extend_details(url, details)
+        if "animeheaven" in url:
+            details = AnimeheavenParser().extend_details(url, details)
+        else:
+            details = self.extend_details(url, details)
         self.config.append(details)
 
     def get_details_from_cache(self, url):
@@ -90,7 +74,9 @@ class ConfigGenerator:
         details = {
             "title": cache.get("title"),
             "current_ep_url": cache.get("current_ep_url"),
+            "current_url": cache.get("current_url"),
             "next_ep_url": cache.get("next_ep_url"),
+            "next_url": cache.get("next_url"),
             "myanimelist_url": cache.get("myanimelist_url"),
             "image": {"url": image.get("url"), "base64_data": image.get("base64_data")},
             "episodes": cache.get("episodes"),
@@ -145,10 +131,11 @@ class ConfigGenerator:
             details["loaded_from_cache"] = False
         if details.get("next_ep_url") != next_ep_url_from_cache:
             details["weight"] = 1
+        if details["current_ep_url"] and not details.get("current_url"):
+            details["current_url"] = details["current_ep_url"]
+        if details["next_ep_url"] and not details.get("next_url"):
+            details["next_url"] = details["next_ep_url"]
         return {**self.base_info, **details}
-
-    def get_unsupported_url_info(self, url, status):
-        return {**self.base_info, "title": url, "status": status, "current_ep_url": url}
 
     def update_with_episode_page_info(self, url, details):
         response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
@@ -190,6 +177,8 @@ class ConfigGenerator:
     def update_url_episode_number(self, url, ep):
         if not ep.isdigit():
             return url
+        if "animeheaven" in url:
+            return AnimeheavenParser().update_url_episode_number(url, ep)
         episode_match = re.match(self.url_reg, url)
         if episode_match:
             if ep == "0":
@@ -202,28 +191,6 @@ class ConfigGenerator:
                 return url
             return f'{url.replace(category_match.group(1), "")}-episode-{ep}'
         return url
-
-    def build_myanimelist_url(self, title):
-        return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
-
-    def get_image_base64_data(self, url):
-        if url:
-            try:
-                encoded_url = self.encode_url(url)
-                req = Request(encoded_url, headers={"User-Agent": "Mozilla/5.0"})
-                return base64.b64encode(urlopen(req).read()).decode("utf-8")
-            except:
-                pass
-        return self.get_default_image_base64_data()
-
-    def get_default_image_base64_data(self):
-        with open(os.path.join("images", "image-not-found.png"), "rb") as f:
-            return base64.b64encode(f.read()).decode("utf-8")
-
-    def encode_url(self, url):
-        protocol, domain, path, query, fragment = urlsplit(url)
-        path = quote(path)
-        return urlunsplit((protocol, domain, path, query, fragment))
 
     def get_skeleton_config(self):
         return [self.base_info] * len(self.get_urls())
@@ -312,7 +279,9 @@ class ConfigGenerator:
             result[key] = {
                 "title": e["title"],
                 "current_ep_url": "" if key in result else e["current_ep_url"],
+                "current_url": "" if key in result else e["current_url"],
                 "next_ep_url": "" if key in result else e["next_ep_url"],
+                "next_url": "" if key in result else e["next_url"],
                 "myanimelist_url": e["myanimelist_url"],
                 "episodes": e["episodes"],
                 "image": {"url": e["image"]["url"], "base64_data": e["image"]["base64_data"]},
@@ -327,6 +296,8 @@ class ConfigGenerator:
             os.remove(self.cache_filepath)
 
     def get_cache_key(self, url):
+        if "animeheaven" in url:
+            return AnimeheavenParser().get_cache_key(url)
         return re.sub(self.cache_key_sub_reg, "", url)
 
     def get_config(self):
