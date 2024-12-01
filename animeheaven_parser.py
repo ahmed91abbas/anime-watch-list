@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from parser_utils import ParserUtils
 
 BASE_URL = "https://animeheaven.me/"
-EP_URL_PATTERN = re.compile("&episode=(\\d+(-\\d+)?)$")
+EP_URL_PATTERN = re.compile("&episode=(\\d+(\\.\\d+)?)$")
 EP_TITLE_PATTERN = re.compile(" Episode (\\d+(\\.\\d+)?)$")
 
 
