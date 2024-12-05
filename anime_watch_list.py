@@ -50,6 +50,7 @@ class AnimeWatchListGUI(GuiUtils):
         self.root.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.resizable(False, False)
         self.root.geometry(self.get_geometry())
+        self.add_icon(self.root)
 
         menu = tk.Menu(self.root)
         self.root.config(menu=menu)
@@ -232,7 +233,6 @@ class AnimeWatchListGUI(GuiUtils):
         return body_frame, elements
 
     def update_gui(self, config, elements):
-        self.add_icon(self.root)
         if len(config) != len(elements):
             raise Exception("config and elements must be of the same length")
 

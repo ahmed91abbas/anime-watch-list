@@ -37,6 +37,7 @@ class AdditionalInfoGUI(GuiUtils):
         self.top.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.top.resizable(False, False)
         self.top.focus()
+        self.add_icon(self.top)
 
         header_frame = tk.Frame(self.top, bg=bg_color)
         body_frame = tk.Frame(self.top, bg=bg_color)
@@ -98,7 +99,6 @@ class AdditionalInfoGUI(GuiUtils):
         self.synopsis_text_widget.pack()
 
     def update_gui(self):
-        self.add_icon(self.top)
         self.top.title("Additional information (Loading...)")
         info = self.generator.get_additional_info(self.title)
         self.replace_widget_text(self.title_text, f'{self.title}\n({info.get("title_english", "-")})')
