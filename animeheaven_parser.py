@@ -19,11 +19,11 @@ class AnimeheavenParser(ParserUtils):
         next_ep_url_from_cache = details.get("next_ep_url")
         details["ep"] = self.get_ep_from_url(url)
         if (
-            not details["title"]
-            or not details["current_ep_url"]
-            or not details["next_ep_url"]
-            or not details["myanimelist_url"]
-            or not details["image"]["url"]
+            not details.get("title")
+            or not details.get("current_ep_url")
+            or not details.get("next_ep_url")
+            or not details.get("myanimelist_url")
+            or not details.get("image", {}).get("url")
         ):
             try:
                 ep, main_url = self.get_main_url(url)
@@ -67,7 +67,7 @@ class AnimeheavenParser(ParserUtils):
         found = False
         for ep_class in ep_classes:
             ep_class_url = urljoin(BASE_URL, ep_class["href"])
-            ep_class_text = ep_class.find("div", {"class": "watch2 bc"}).text
+            ep_class_text = ep_class.find("div", class_=lambda c: c and c.startswith("watch2 bc")).text
             if "raw" in ep_class_text:
                 continue
             if ep_class_text == ep:
@@ -84,10 +84,11 @@ class AnimeheavenParser(ParserUtils):
             details["next_ep_url"] = ""
 
         details["title"] = soup.find("div", {"class": "infotitle c"}).text
-        details["myanimelist_url"] = details["myanimelist_url"] or self.build_myanimelist_url(details["title"])
+        details["myanimelist_url"] = details.get("myanimelist_url") or self.build_myanimelist_url(details["title"])
+        details["image"] = {}
         details["image"]["url"] = soup.find("img", {"class": "posterimg"})["src"]
         details["image"]["base64_data"] = self.get_image_base64_data(details["image"]["url"])
-        if details["episodes"] == details["ep"]:
+        if details.get("episodes", "") == details["ep"]:
             details["status"] = self.STATUSES["finished"]
         return details
 
@@ -97,3 +98,7 @@ class AnimeheavenParser(ParserUtils):
     def update_url_episode_number(self, url, ep):
         main_url = re.sub(EP_URL_PATTERN, "", url)
         return f"{main_url}&episode={ep}" if "anime.php" in url else url
+
+
+if __name__ == "__main__":
+    parser = AnimeheavenParser()
