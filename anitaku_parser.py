@@ -51,10 +51,8 @@ class AnitakuParser(ParserUtils):
             details["loaded_from_cache"] = False
         if details.get("next_ep_url") != next_ep_url_from_cache:
             details["weight"] = 1
-        if details["current_ep_url"] and not details.get("current_url"):
-            details["current_url"] = details["current_ep_url"]
-        if details["next_ep_url"] and not details.get("next_url"):
-            details["next_url"] = details["next_ep_url"]
+        details["current_url"] = details["current_ep_url"]
+        details["next_url"] = details["next_ep_url"]
         return {**self.base_info, **details}
 
     def update_with_episode_page_info(self, url, details):
