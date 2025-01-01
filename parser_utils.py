@@ -52,3 +52,12 @@ class ParserUtils:
 
     def get_unsupported_url_info(self, url, status):
         return {**self.base_info, "title": url, "status": status, "current_ep_url": url}
+
+    def should_fetch_details_online(self, details):
+        return (
+            not details.get("title")
+            or not details.get("current_ep_url")
+            or (not details.get("next_ep_url") and details.get("episodes") != details.get("ep"))
+            or not details.get("myanimelist_url")
+            or not details.get("image", {}).get("url")
+        )

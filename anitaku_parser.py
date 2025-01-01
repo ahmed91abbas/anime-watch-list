@@ -8,6 +8,7 @@ from parser_utils import ParserUtils
 
 ALLOWED_DOMAINS = ["gogoanime", "gogoanimes", "anitaku"]
 
+
 class AnitakuParser(ParserUtils):
     def __init__(self):
         super().__init__()
@@ -33,13 +34,7 @@ class AnitakuParser(ParserUtils):
 
         if details["episodes"] == details["ep"]:
             details["status"] = self.STATUSES["finished"]
-        elif (
-            not details["title"]
-            or not details["current_ep_url"]
-            or not details["next_ep_url"]
-            or not details["myanimelist_url"]
-            or not details["image"]["url"]
-        ):
+        elif self.should_fetch_details_online(details):
             try:
                 update_method(url, details)
                 details["loaded_from_cache"] = False

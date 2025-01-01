@@ -18,13 +18,9 @@ class AnimeheavenParser(ParserUtils):
     def extend_details(self, url, details):
         next_ep_url_from_cache = details.get("next_ep_url")
         details["ep"] = self.get_ep_from_url(url)
-        if (
-            not details.get("title")
-            or not details.get("current_ep_url")
-            or not details.get("next_ep_url")
-            or not details.get("myanimelist_url")
-            or not details.get("image", {}).get("url")
-        ):
+        if details["episodes"] == details["ep"]:
+            details["status"] = self.STATUSES["finished"]
+        if self.should_fetch_details_online(details):
             try:
                 ep, main_url = self.get_main_url(url)
                 details = self.extend_details_from_main_page(ep, main_url, details)
