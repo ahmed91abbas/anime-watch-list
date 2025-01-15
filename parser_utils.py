@@ -33,7 +33,8 @@ class ParserUtils:
             try:
                 encoded_url = self.encode_url(url)
                 req = Request(encoded_url, headers={"User-Agent": "Mozilla/5.0"})
-                return base64.b64encode(urlopen(req).read()).decode("utf-8")
+                with urlopen(req, timeout=3) as response:
+                    return base64.b64encode(response.read()).decode("utf-8")
             except:
                 pass
         return self.get_default_image_base64_data()
