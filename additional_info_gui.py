@@ -53,9 +53,9 @@ class AdditionalInfoGUI(GuiUtils):
         padx = 15
         pady = 15
         image = self.get_image_data(self.base64_image_data, 320, 500)
-        img_label = tk.Label(body_frame, bg=bg_color, image=image)
-        img_label.image = image
-        img_label.pack(side=tk.LEFT, padx=padx, pady=pady)
+        self.img_label = tk.Label(body_frame, bg=bg_color, image=image)
+        self.img_label.image = image
+        self.img_label.pack(side=tk.LEFT, padx=padx, pady=pady)
 
         info_frame = tk.Frame(body_frame, bg=bg_color)
         info_frame.pack(side=tk.RIGHT, padx=(0, padx), pady=pady, fill=tk.BOTH)
@@ -110,6 +110,10 @@ class AdditionalInfoGUI(GuiUtils):
                 url = value
                 text_widget.bind("<ButtonRelease-1>", lambda e: webbrowser.open(url, new=0, autoraise=True))
                 text_widget.config(fg="blue", cursor="hand2")
+        if info.get("base64_image_data"):
+            image = self.get_image_data(info["base64_image_data"], 320, 500)
+            self.img_label.config(image=image)
+            self.img_label.image = image
         self.synopsis_text_widget.insert(tk.INSERT, info.get("synopsis", "-"))
         self.synopsis_text_widget.config(state=tk.DISABLED)
         self.top.title("Additional information")

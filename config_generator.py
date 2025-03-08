@@ -121,7 +121,16 @@ class ConfigGenerator(ParserUtils):
             for title_object in item["titles"]:
                 if filtered_title == self.filter_title(title_object["title"]):
                     info = self.map_myanimelist_response(item)
-                    self.update_cache({"myanimelist_url": info["url"], "episodes": info["episodes"]}, title)
+                    fields_to_update = {"myanimelist_url": info["url"], "episodes": info["episodes"]}
+                    if info["image_url"]:
+                        base64_image_data = self.get_image_base64_data(info["image_url"])
+                        image = {
+                            "url": info["image_url"],
+                            "base64_data": base64_image_data,
+                        }
+                        info["base64_image_data"] = base64_image_data
+                        fields_to_update["image"] = image
+                    self.update_cache(fields_to_update, title)
                     return info
         return {}
 
@@ -151,6 +160,9 @@ class ConfigGenerator(ParserUtils):
         else:
             broadcast = "-"
         genres = [self.stringify(genre["name"]) for genre in response["genres"]]
+        img_url = response["images"].get("webp", {}).get("large_image_url", "") or response["images"].get(
+            "jpg", {}
+        ).get("large_image_url", "")
         return {
             "url": self.stringify(response["url"]),
             "title_english": self.stringify(response["title_english"]),
@@ -163,6 +175,7 @@ class ConfigGenerator(ParserUtils):
             "broadcast": self.stringify(broadcast),
             "genres": ", ".join(genres),
             "synopsis": self.stringify(response["synopsis"]),
+            "image_url": img_url,
         }
 
     def stringify(self, value):
@@ -240,7 +253,7 @@ class ConfigGenerator(ParserUtils):
 
     def get_domain_name(self, url):
         parsed_url = urlparse(url)
-        domain = parsed_url.netloc.split('.')[0]
+        domain = parsed_url.netloc.split(".")[0]
         return domain if domain in self.parsers else "generic"
 
 

@@ -32,6 +32,7 @@ class AnimeWatchListGUI(GuiUtils):
         self.config = self.generator.get_config()
         self.config = self.sort_config(self.config)
         self.update_gui(self.config, elements)
+        self.generator.update_config(self.config)
 
     def sort_config(self, config):
         config = sorted(config, key=lambda x: f"{x['status']} {x['title']}")
@@ -239,8 +240,13 @@ class AnimeWatchListGUI(GuiUtils):
         for i in range(len(config)):
             c = config[i]
             e = elements[i]
-
-            image = self.get_image_data(c["image"]["base64_data"], e["img_width"], e["img_height"])
+            try:
+                image = self.get_image_data(c["image"]["base64_data"], e["img_width"], e["img_height"])
+            except:
+                print(f"Error loading image for {c['title']}")
+                self.config[i]["image"]["url"] = ""
+                self.config[i]["image"]["base64_data"] = self.generator.get_default_image_base64_data()
+                image = self.get_image_data(self.config[i]["image"]["base64_data"], e["img_width"], e["img_height"])
             e["img_button"].config(image=image)
             e["img_button"].image = image
             title = f"[{c['status']}] {c['title']}" if c["status"] else c["title"]
