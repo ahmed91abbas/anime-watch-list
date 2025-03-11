@@ -80,10 +80,15 @@ class AnimeheavenParser(ParserUtils):
             details["next_ep_url"] = ""
 
         details["title"] = soup.find("div", {"class": "infotitle c"}).text
-        details["myanimelist_url"] = details.get("myanimelist_url") or self.build_myanimelist_url(details["title"])
-        details["image"] = {}
-        details["image"]["url"] = soup.find("img", {"class": "posterimg"})["src"]
-        details["image"]["base64_data"] = self.get_image_base64_data(details["image"]["url"])
+
+        if not details.get("myanimelist_url"):
+            details["myanimelist_url"] = details.get("myanimelist_url") or self.build_myanimelist_url(details["title"])
+
+        if not details.get("image"):
+            details["image"] = {}
+            details["image"]["url"] = soup.find("img", {"class": "posterimg"})["src"]
+            details["image"]["base64_data"] = self.get_image_base64_data(details["image"]["url"])
+
         if details.get("episodes", "") == details["ep"]:
             details["status"] = self.STATUSES["finished"]
         return details
