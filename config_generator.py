@@ -136,6 +136,7 @@ class ConfigGenerator(ParserUtils):
 
     def filter_title(self, title):
         title = re.sub(self.title_parentheses_reg, "", title).rstrip()
+        title = re.sub(r"(\d+)(st|nd|rd|th) season", r"season \1", title, flags=re.IGNORECASE)
         return re.sub(self.title_special_chars_reg, "", title).lower()
 
     def update_cache(self, fields_to_update, title):
