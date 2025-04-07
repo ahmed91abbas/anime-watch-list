@@ -117,22 +117,33 @@ class ConfigGenerator(ParserUtils):
         response = response.json()
         if not "data" in response:
             return {}
+        backup_item = None
         for item in response["data"]:
             for title_object in item["titles"]:
-                if filtered_title == self.filter_title(title_object["title"]):
+                filtered_res_title = self.filter_title(title_object["title"])
+                if filtered_title == filtered_res_title:
                     info = self.map_myanimelist_response(item)
-                    fields_to_update = {"myanimelist_url": info["url"], "episodes": info["episodes"]}
-                    if info["image_url"]:
-                        base64_image_data = self.get_image_base64_data(info["image_url"])
-                        image = {
-                            "url": info["image_url"],
-                            "base64_data": base64_image_data,
-                        }
-                        info["base64_image_data"] = base64_image_data
-                        fields_to_update["image"] = image
-                    self.update_cache(fields_to_update, title)
+                    self.cache_myanimelist_mapped_item(title, info)
                     return info
+                elif filtered_res_title in filtered_title or filtered_title in filtered_res_title:
+                    backup_item = item
+        if backup_item:
+            info = self.map_myanimelist_response(backup_item)
+            self.cache_myanimelist_mapped_item(title, info)
+            return info
         return {}
+
+    def cache_myanimelist_mapped_item(self, title, item):
+        fields_to_update = {"myanimelist_url": item["url"], "episodes": item["episodes"]}
+        if item["image_url"]:
+            base64_image_data = self.get_image_base64_data(item["image_url"])
+            image = {
+                "url": item["image_url"],
+                "base64_data": base64_image_data,
+            }
+            item["base64_image_data"] = base64_image_data
+            fields_to_update["image"] = image
+        self.update_cache(fields_to_update, title)
 
     def filter_title(self, title):
         title = re.sub(self.title_parentheses_reg, "", title).rstrip()
