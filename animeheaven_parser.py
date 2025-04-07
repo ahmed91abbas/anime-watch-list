@@ -64,7 +64,7 @@ class AnimeheavenParser(ParserUtils):
         for ep_class in ep_classes:
             ep_class_url = urljoin(BASE_URL, ep_class["href"])
             ep_class_text = ep_class.find("div", class_=lambda c: c and c.startswith("watch2 bc")).text
-            if "raw" in ep_class_text:
+            if re.search("[a-zA-Z]", ep_class_text):
                 continue
             if ep_class_text == ep:
                 details["current_url"] = ep_class_url
