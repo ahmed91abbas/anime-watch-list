@@ -24,6 +24,8 @@ class AnimeheavenParser(ParserUtils):
             try:
                 ep, main_url = self.get_main_url(url)
                 details = self.extend_details_from_main_page(ep, main_url, details)
+                if ep == "0" and not details.get("next_ep_url"):
+                    details["status"] = self.STATUSES["not_aired"]
                 details["loaded_from_cache"] = False
             except:
                 details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
