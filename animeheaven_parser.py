@@ -86,7 +86,7 @@ class AnimeheavenParser(ParserUtils):
         if not details.get("myanimelist_url"):
             details["myanimelist_url"] = details.get("myanimelist_url") or self.build_myanimelist_url(details["title"])
 
-        if not details.get("image"):
+        if not details.get("image").get("url"):
             details["image"] = {}
             details["image"]["url"] = soup.find("img", {"class": "posterimg"})["src"]
             details["image"]["base64_data"] = self.get_image_base64_data(details["image"]["url"])
