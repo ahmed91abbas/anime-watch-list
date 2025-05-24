@@ -4,7 +4,7 @@ import os
 import re
 import time
 from datetime import datetime
-from urllib.parse import parse_qsl, urlparse
+from urllib.parse import urlparse
 
 import requests
 from pytz import timezone
@@ -12,6 +12,7 @@ from pytz import timezone
 from animeheaven_parser import AnimeheavenParser
 from anitaku_parser import AnitakuParser
 from generic_parser import GenericParser
+from hianime_parser import HiAnimeParser
 from parser_utils import ParserUtils
 
 MAX_THREADS = 8
@@ -30,6 +31,7 @@ class ConfigGenerator(ParserUtils):
         self.parsers = {
             "animeheaven": AnimeheavenParser(),
             "anitaku": AnitakuParser(),
+            "hianime": HiAnimeParser(),
             "generic": GenericParser(),
         }
 

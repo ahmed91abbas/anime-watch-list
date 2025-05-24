@@ -6,6 +6,7 @@ All you need to do is add the URLs of the anime you want to watch in the configs
 Currently supported websites:
 - anitaku
 - animeheaven
+- hianime
 
 <b>Download the latest release for Windows from [here](https://github.com/ahmed91abbas/anime-watch-list/releases/latest).</b>
 
