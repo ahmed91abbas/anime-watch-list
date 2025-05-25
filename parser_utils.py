@@ -58,7 +58,7 @@ class ParserUtils:
         return (
             not details.get("title")
             or not details.get("current_ep_url")
-            or (not details.get("next_ep_url") and details.get("episodes") != details.get("ep"))
+            or (not details.get("next_ep_url") and details.get("status") != self.STATUSES["finished"])
             or not details.get("myanimelist_url")
             or not details.get("image", {}).get("url")
         )

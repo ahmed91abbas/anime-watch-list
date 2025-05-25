@@ -17,15 +17,20 @@ class HiAnimeParser(ParserUtils):
 
     def extend_details(self, url, details):
         next_ep_url_from_cache = details.get("next_ep_url")
+        display_ep_match = DISPLAY_EP_URL_PATTERN.search(url)
+        details["ep"] = display_ep_match.group(1) if display_ep_match else "0"
         if not details.get("title") or not details.get("myanimelist_url") or not details.get("image", {}).get("url"):
             try:
                 details = self.extend_details_from_page(url, details)
                 details["loaded_from_cache"] = False
             except:
                 details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
-        if not details.get("ep") or not details.get("next_ep_url"):
+        if not details.get("current_ep_url") or (
+            not details.get("next_ep_url") and details.get("status") != self.STATUSES["finished"]
+        ):
             try:
                 details = self.extend_details_with_ep_data(url, details)
+                details["loaded_from_cache"] = False
             except:
                 details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
         if details.get("next_ep_url") != next_ep_url_from_cache:

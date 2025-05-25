@@ -29,10 +29,10 @@ class ConfigGenerator(ParserUtils):
         self.cache_filepath = os.path.join(CONFIG_DIR, cache_filename)
         self.config = []
         self.parsers = {
-            "animeheaven": AnimeheavenParser(),
-            "anitaku": AnitakuParser(),
-            "hianime": HiAnimeParser(),
-            "generic": GenericParser(),
+            "animeheaven": AnimeheavenParser,
+            "anitaku": AnitakuParser,
+            "hianime": HiAnimeParser,
+            "generic": GenericParser,
         }
 
     def read_json(self, path):
@@ -66,23 +66,15 @@ class ConfigGenerator(ParserUtils):
 
     def get_details(self, url):
         details = self.get_details_from_cache(url)
-        details = self.parsers[self.get_domain_name(url)].extend_details(url, details)
+        details = self.parsers[self.get_domain_name(url)]().extend_details(url, details)
         self.config.append(details)
 
     def get_details_from_cache(self, url):
+        loaded_from_cache = True
         cache = self.cache.get(self.get_cache_key(url), {})
-        image = cache.get("image", {})
-        details = {
-            "title": cache.get("title"),
-            "current_ep_url": cache.get("current_ep_url"),
-            "current_url": cache.get("current_url"),
-            "next_ep_url": cache.get("next_ep_url"),
-            "next_url": cache.get("next_url"),
-            "myanimelist_url": cache.get("myanimelist_url"),
-            "image": {"url": image.get("url"), "base64_data": image.get("base64_data")},
-            "episodes": cache.get("episodes"),
-            "loaded_from_cache": True,
-        }
+        if not cache:
+            loaded_from_cache = False
+        details = {**self.base_info, **cache, "loaded_from_cache": loaded_from_cache}
         if url != details["current_ep_url"]:
             details["current_ep_url"] = url
             details["next_ep_url"] = ""
@@ -91,7 +83,7 @@ class ConfigGenerator(ParserUtils):
     def update_url_episode_number(self, url, ep):
         if not ep.isdigit():
             return url
-        return self.parsers[self.get_domain_name(url)].update_url_episode_number(url, ep)
+        return self.parsers[self.get_domain_name(url)]().update_url_episode_number(url, ep)
 
     def get_skeleton_config(self):
         return [self.base_info] * len(self.get_urls())
@@ -206,6 +198,7 @@ class ConfigGenerator(ParserUtils):
                 continue
             result[key] = {
                 "title": e["title"],
+                "status": e["status"],
                 "current_ep_url": "" if key in result else e["current_ep_url"],
                 "current_url": "" if key in result else e["current_url"],
                 "next_ep_url": "" if key in result else e["next_ep_url"],
@@ -224,7 +217,7 @@ class ConfigGenerator(ParserUtils):
             os.remove(self.cache_filepath)
 
     def get_cache_key(self, url):
-        return self.parsers[self.get_domain_name(url)].get_cache_key(url)
+        return self.parsers[self.get_domain_name(url)]().get_cache_key(url)
 
     def get_config(self):
         start_time = time.time()
