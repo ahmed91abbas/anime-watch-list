@@ -101,7 +101,9 @@ class AdditionalInfoGUI(GuiUtils):
     def update_gui(self):
         self.top.title("Additional information (Loading...)")
         info = self.generator.get_additional_info(self.title)
-        self.replace_widget_text(self.title_text, f'{self.title}\n({info.get("title_english", "-")})')
+        self.replace_widget_text(
+            self.title_text, f'{info.get("title", self.title)}\n({info.get("title_english", "-")})'
+        )
         for info_title in self.info_titles:
             text_widget = self.text_widgets_dict[info_title]
             value = str(info.get(info_title.lower(), "-"))

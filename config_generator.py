@@ -171,6 +171,7 @@ class ConfigGenerator(ParserUtils):
         ).get("large_image_url", "")
         return {
             "url": self.stringify(response["url"]),
+            "title": self.stringify(response["title"]),
             "title_english": self.stringify(response["title_english"]),
             "source": self.stringify(response["source"]),
             "status": self.stringify(response["status"]),
