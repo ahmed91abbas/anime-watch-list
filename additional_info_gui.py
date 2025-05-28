@@ -7,10 +7,11 @@ from gui_utils import GuiUtils
 
 
 class AdditionalInfoGUI(GuiUtils):
-    def __init__(self, title, base64_image_data):
+    def __init__(self, title, mal_id, base64_image_data):
         super().__init__(__file__)
         self.generator = ConfigGenerator()
         self.title = title
+        self.mal_id = mal_id
         self.base64_image_data = base64_image_data
         self.info_titles = [
             "Url",
@@ -100,7 +101,11 @@ class AdditionalInfoGUI(GuiUtils):
 
     def update_gui(self):
         self.top.title("Additional information (Loading...)")
-        info = self.generator.get_additional_info(self.title)
+        try:
+            info = self.generator.get_additional_info(self.title, mal_id=self.mal_id)
+        except:
+            self.top.title("Additional information (Failed to load)")
+            return
         self.replace_widget_text(
             self.title_text, f'{info.get("title", self.title)}\n({info.get("title_english", "-")})'
         )

@@ -103,9 +103,17 @@ class ConfigGenerator(ParserUtils):
             return days[days.index(day) - 1], converted_time
         return days[(days.index(day) + 1) % len(days)], converted_time
 
-    def get_additional_info(self, title):
+    def get_additional_info(self, title, mal_id=None):
         filtered_title = self.filter_title(title)
         url = "https://api.jikan.moe/v4/anime"
+        if mal_id:
+            url = f"https://api.jikan.moe/v4/anime/{mal_id}"
+            response = requests.request("GET", url)
+            response = response.json()["data"]
+            info = self.map_myanimelist_response(response)
+            self.cache_myanimelist_mapped_item(title, info)
+            return info
+
         params = {"q": filtered_title, "limit": "5"}
         response = requests.request("GET", url, params=params)
         response = response.json()
@@ -128,7 +136,7 @@ class ConfigGenerator(ParserUtils):
         return {}
 
     def cache_myanimelist_mapped_item(self, title, item):
-        fields_to_update = {"myanimelist_url": item["url"], "episodes": item["episodes"]}
+        fields_to_update = {"myanimelist_url": item["url"], "episodes": item["episodes"], "mal_id": item["mal_id"]}
         if item["image_url"]:
             base64_image_data = self.get_image_base64_data(item["image_url"])
             image = {
@@ -173,6 +181,7 @@ class ConfigGenerator(ParserUtils):
             "url": self.stringify(response["url"]),
             "title": self.stringify(response["title"]),
             "title_english": self.stringify(response["title_english"]),
+            "mal_id": self.stringify(response["mal_id"]),
             "source": self.stringify(response["source"]),
             "status": self.stringify(response["status"]),
             "episodes": self.stringify(response["episodes"]),
@@ -204,6 +213,7 @@ class ConfigGenerator(ParserUtils):
                 "current_url": "" if key in result else e["current_url"],
                 "next_ep_url": "" if key in result else e["next_ep_url"],
                 "next_url": "" if key in result else e["next_url"],
+                "mal_id": e["mal_id"],
                 "myanimelist_url": e["myanimelist_url"],
                 "episodes": e["episodes"],
                 "image": {"url": e["image"]["url"], "base64_data": e["image"]["base64_data"]},

@@ -394,7 +394,11 @@ class AnimeWatchListGUI(GuiUtils):
         self.elements[index]["marked_for_deletion"] = not self.elements[index]["marked_for_deletion"]
 
     def on_image_button(self, index):
-        AdditionalInfoGUI(self.config[index]["title"], self.config[index]["image"]["base64_data"])
+        AdditionalInfoGUI(
+            self.config[index]["title"],
+            self.config[index]["mal_id"],
+            self.config[index]["image"]["base64_data"],
+        )
 
     def on_settings(self):
         for element in self.elements:

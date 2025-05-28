@@ -21,6 +21,7 @@ class ParserUtils:
             "next_ep_url": "",
             "next_url": "",
             "myanimelist_url": "",
+            "mal_id": None,
             "ep": "-1",
             "loaded_from_cache": False,
             "weight": 0,
@@ -48,7 +49,9 @@ class ParserUtils:
         path = quote(path)
         return urlunsplit((protocol, domain, path, query, fragment))
 
-    def build_myanimelist_url(self, title):
+    def build_myanimelist_url(self, title, mal_id=None):
+        if mal_id:
+            return f"https://myanimelist.net/anime/{mal_id}"
         return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
 
     def get_unsupported_url_info(self, url, status):

@@ -72,7 +72,7 @@ class AnitakuParser(ParserUtils):
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.find("div", {"class": "anime_info_body_bg"}).h1.text
         cover_url = soup.find(itemprop="image").get("content")
-        myanimelist_url = self.build_myanimelist_url(title)
+        myanimelist_url = self.build_myanimelist_url(title, mal_id=details.get("mal_id"))
         ep_end = soup.find("div", {"class": "anime_video_body"}).a.get("ep_end")
         next_ep_url = ""
         status = self.STATUSES["default"]
@@ -84,7 +84,7 @@ class AnitakuParser(ParserUtils):
         details["status"] = status
         details["current_ep_url"] = url
         details["next_ep_url"] = next_ep_url
-        details["myanimelist_url"] = details["myanimelist_url"] or myanimelist_url
+        details["myanimelist_url"] = myanimelist_url
         details["image"]["url"] = cover_url
 
     def get_cache_key(self, url):

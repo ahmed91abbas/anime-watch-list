@@ -83,8 +83,7 @@ class AnimeheavenParser(ParserUtils):
 
         details["title"] = soup.find("div", {"class": "infotitle c"}).text
 
-        if not details.get("myanimelist_url"):
-            details["myanimelist_url"] = details.get("myanimelist_url") or self.build_myanimelist_url(details["title"])
+        details["myanimelist_url"] = self.build_myanimelist_url(details["title"], mal_id=details.get("mal_id"))
 
         if not details.get("image").get("url"):
             details["image"] = {}

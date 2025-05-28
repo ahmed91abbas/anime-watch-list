@@ -1,3 +1,4 @@
+import html
 import json
 import re
 
@@ -19,7 +20,7 @@ class HiAnimeParser(ParserUtils):
         next_ep_url_from_cache = details.get("next_ep_url")
         display_ep_match = DISPLAY_EP_URL_PATTERN.search(url)
         details["ep"] = display_ep_match.group(1) if display_ep_match else "0"
-        if not details.get("title") or not details.get("myanimelist_url") or not details.get("image", {}).get("url"):
+        if not details.get("title") or not details.get("mal_id") or not details.get("image", {}).get("url"):
             try:
                 details = self.extend_details_from_page(url, details)
                 details["loaded_from_cache"] = False
@@ -75,9 +76,9 @@ class HiAnimeParser(ParserUtils):
             data = json.loads(script.string)
         else:
             raise Exception("Script with syncData not found in the page")
-        details["title"] = data.get("name", "")
-        if data.get("mal_id"):
-            details["myanimelist_url"] = f"https://myanimelist.net/anime/{data['mal_id']}"
+        details["title"] = html.unescape(data.get("name", ""))
+        details["mal_id"] = data.get("mal_id")
+        details["myanimelist_url"] = self.build_myanimelist_url(details["title"], mal_id=data.get("mal_id"))
         if not details.get("image").get("url"):
             try:
                 img_url = soup.find("div", {"class": "film-poster"}).find("img")["src"]
