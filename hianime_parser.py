@@ -36,6 +36,7 @@ class HiAnimeParser(ParserUtils):
                 details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
         if details.get("next_ep_url") != next_ep_url_from_cache:
             details["weight"] = 1
+        details["status"] = self.STATUSES["default"]
         if details["episodes"] == details["ep"]:
             details["status"] = self.STATUSES["finished"]
         if details["ep"] == "0" and not details.get("next_ep_url"):
