@@ -61,18 +61,21 @@ class AnimeheavenParser(ParserUtils):
         details["current_url"] = details["current_ep_url"]
         response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
         soup = BeautifulSoup(response.text, "html.parser")
-        ep_classes = soup.find_all("a", {"class": "ac3"})
+        ep_links = soup.find_all("a", class_="c")
         found = False
-        for ep_class in ep_classes:
-            ep_class_url = urljoin(BASE_URL, ep_class["href"])
-            ep_class_text = ep_class.find("div", class_=lambda c: c and c.startswith("watch2 bc")).text
+        for link in ep_links:
+            ep_div = link.find("div", class_="watch2 bc")
+            if not ep_div:
+                continue
+            ep_class_text = ep_div.text.strip()
             if re.search("[a-zA-Z]", ep_class_text):
                 continue
+            ep_id = link.get("id")
             if ep_class_text == ep:
-                details["current_url"] = ep_class_url
+                details["current_url"] = f"https://f1.animeheaven.me/video.mp4?{ep_id}&episode={ep_class_text}"
                 found = True
                 break
-            details["next_url"] = ep_class_url
+            details["next_url"] = f"https://f1.animeheaven.me/video.mp4?{ep_id}&episode={ep_class_text}"
             details["next_ep_url"] = f"{url}&episode={ep_class_text}"
 
         if not found and ep != "0":
