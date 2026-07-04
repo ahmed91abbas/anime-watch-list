@@ -17,6 +17,7 @@ class AnimeheavenParser(ParserUtils):
 
     def extend_details(self, url, details):
         next_ep_url_from_cache = details.get("next_ep_url")
+        details["status"] = self.STATUSES["default"]
         details["ep"] = self.get_ep_from_url(url)
         if details["episodes"] == details["ep"]:
             details["status"] = self.STATUSES["finished"]
