@@ -10,6 +10,7 @@ import requests
 from pytz import timezone
 
 from animeheaven_parser import AnimeheavenParser
+from anineko_parser import AninekoParser
 from anitaku_parser import AnitakuParser
 from generic_parser import GenericParser
 from hianime_parser import HiAnimeParser
@@ -29,6 +30,7 @@ class ConfigGenerator(ParserUtils):
         self.cache_filepath = os.path.join(CONFIG_DIR, cache_filename)
         self.config = []
         self.parsers = {
+            "anineko": AninekoParser,
             "animeheaven": AnimeheavenParser,
             "anitaku": AnitakuParser,
             "hianime": HiAnimeParser,
@@ -75,7 +77,7 @@ class ConfigGenerator(ParserUtils):
         if not cache:
             loaded_from_cache = False
         details = {**self.base_info, **cache, "loaded_from_cache": loaded_from_cache}
-        if url != details["current_ep_url"]:
+        if url != details.get("current_ep_url"):
             details["current_ep_url"] = url
             details["next_ep_url"] = ""
         return details

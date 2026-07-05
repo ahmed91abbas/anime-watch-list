@@ -3,11 +3,13 @@ Anime Watch List is a desktop application that enable you to keep track of the a
 
 All you need to do is add the URLs of the anime you want to watch in the configs/config.txt file and run the application.
 
-Currently supported websites:
-- anitaku
-- animeheaven
-    - enter the main page url followed by "&episode=1" (or a different ep number)
-- hianime
+Currently supported servers:
+| Server      | Status | Last checked | Note                                                                        |
+|-------------|--------|--------------|-----------------------------------------------------------------------------|
+| anineko     | Up     | 2026-07-05   |                                                                             |
+| animeheaven | Up     | 2026-07-05   | enter the main page url followed by "&episode=1" (or a different ep number) |
+| anitaku     | Down   | 2026-07-05   |                                                                             |
+| hianime     | Down   | 2026-07-05   |                                                                             |
 
 <b>Download the latest release for Windows from [here](https://github.com/ahmed91abbas/anime-watch-list/releases/latest).</b>
 
