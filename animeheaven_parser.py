@@ -38,6 +38,13 @@ class AnimeheavenParser(ParserUtils):
         ep_match = re.search(EP_URL_PATTERN, url)
         return ep_match.group(1) if ep_match else "0"
 
+    def get_id_from_main_url(self, url):
+        id_match = re.search(r"anime\.php\?([^&]+)", url)
+        return id_match.group(1) if id_match else None
+
+    def build_watch_url(self, anime_id, ep_id, ep):
+        return f"https://f1.animeheaven.me/video.mp4?{ep_id}&anime.php?{anime_id}&episode={ep}"
+
     def get_main_url(self, url):
         ep = self.get_ep_from_url(url)
         if "anime.php" in url:
@@ -62,6 +69,7 @@ class AnimeheavenParser(ParserUtils):
         details["current_url"] = details["current_ep_url"]
         response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
         soup = BeautifulSoup(response.text, "html.parser")
+        anime_id = self.get_id_from_main_url(url)
         ep_links = soup.find_all("a", class_="c")
         found = False
         for link in ep_links:
@@ -73,10 +81,10 @@ class AnimeheavenParser(ParserUtils):
                 continue
             ep_id = link.get("id")
             if ep_class_text == ep:
-                details["current_url"] = f"https://f1.animeheaven.me/video.mp4?{ep_id}&episode={ep_class_text}"
+                details["current_url"] = self.build_watch_url(anime_id, ep_id, ep_class_text)
                 found = True
                 break
-            details["next_url"] = f"https://f1.animeheaven.me/video.mp4?{ep_id}&episode={ep_class_text}"
+            details["next_url"] = self.build_watch_url(anime_id, ep_id, ep_class_text)
             details["next_ep_url"] = f"{url}&episode={ep_class_text}"
 
         if not found and ep != "0":
