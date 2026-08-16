@@ -63,5 +63,5 @@ class ParserUtils:
             or not details.get("current_ep_url")
             or (not details.get("next_ep_url") and details.get("status") != self.STATUSES["finished"])
             or not details.get("myanimelist_url")
-            or not details.get("image", {}).get("url")
+            or details.get("image", {}).get("base64_data") == self.get_default_image_base64_data()
         )
