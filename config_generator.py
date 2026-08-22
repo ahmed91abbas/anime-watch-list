@@ -159,7 +159,7 @@ class ConfigGenerator(ParserUtils):
 
     def map_myanimelist_response(self, response):
         current_zone = "Europe/Stockholm"
-        if response["broadcast"]["day_of_the_week"]:
+        if response.get("broadcast", {}).get("day_of_the_week"):
             day, time = self.convert_time_timezone(
                 response["broadcast"]["day_of_the_week"],
                 response["broadcast"]["start_time"],
@@ -169,28 +169,28 @@ class ConfigGenerator(ParserUtils):
             broadcast = f"{day} at {time} ({current_zone})"
         else:
             broadcast = "-"
-        genres = [self.stringify(genre["name"]) for genre in response["genres"]]
+        genres = [self.stringify(genre["name"]) for genre in response.get("genres", [])]
         season = (
             f"{response['start_season']['season'].capitalize()} {response['start_season']['year']}"
-            if response["start_season"]
+            if response.get("start_season")
             else "-"
         )
         return {
             "url": f"https://myanimelist.net/anime/{response['id']}",
-            "title": self.stringify(response["title"]),
-            "title_english": self.stringify(response["alternative_titles"]["en"]),
-            "mal_id": self.stringify(response["id"]),
-            "source": self.stringify(response["source"]),
-            "status": self.stringify(response["status"]),
-            "episodes": self.stringify(response["num_episodes"]),
-            "aired": self.stringify(response["start_date"]),
-            "score": self.stringify(response["mean"]),
-            "rank": self.stringify(response["rank"]),
+            "title": self.stringify(response.get("title")),
+            "title_english": self.stringify(response.get("alternative_titles", {}).get("en")),
+            "mal_id": self.stringify(response.get("id")),
+            "source": self.stringify(response.get("source")),
+            "status": self.stringify(response.get("status")),
+            "episodes": self.stringify(response.get("num_episodes")),
+            "aired": self.stringify(response.get("start_date")),
+            "score": self.stringify(response.get("mean")),
+            "rank": self.stringify(response.get("rank")),
             "season": self.stringify(season),
             "broadcast": self.stringify(broadcast),
             "genres": ", ".join(genres),
-            "synopsis": self.stringify(response["synopsis"]),
-            "image_url": response["main_picture"]["large"],
+            "synopsis": self.stringify(response.get("synopsis")),
+            "image_url": response.get("main_picture", {}).get("large"),
         }
 
     def stringify(self, value):
