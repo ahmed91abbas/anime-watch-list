@@ -1,11 +1,14 @@
 import base64
 import os
+import re
 from urllib.parse import quote, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
 
 class ParserUtils:
     def __init__(self):
+        self.title_parentheses_reg = re.compile(r" (\(.*\))$")
+        self.title_special_chars_reg = re.compile(r"[^\w\s\-_]")
         self.STATUSES = {
             "default": "",
             "not_aired": "Not yet aired",
@@ -52,7 +55,8 @@ class ParserUtils:
     def build_myanimelist_url(self, title, mal_id=None):
         if mal_id:
             return f"https://myanimelist.net/anime/{mal_id}"
-        return f'https://myanimelist.net/search/all?q={"%20".join(title.split(" "))}&cat=anime#anime'
+        filtered_title = self.filter_title(title)
+        return f"https://myanimelist.net/search/all?q={quote(filtered_title)}&cat=anime#anime"
 
     def get_unsupported_url_info(self, url, status):
         return {**self.base_info, "title": url, "status": status, "current_ep_url": url}
@@ -65,3 +69,9 @@ class ParserUtils:
             or not details.get("myanimelist_url")
             or details.get("image", {}).get("base64_data") == self.get_default_image_base64_data()
         )
+
+    def filter_title(self, title):
+        title = re.sub(self.title_parentheses_reg, "", title).rstrip()
+        title = re.sub(r"(\d+)(st|nd|rd|th) season", r"season \1", title, flags=re.IGNORECASE)
+        # myanimelist has a 63 character limit for query searches.
+        return re.sub(self.title_special_chars_reg, "", title).lower()[:63]

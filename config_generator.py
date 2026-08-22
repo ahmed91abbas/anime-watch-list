@@ -26,8 +26,6 @@ CONFIG_DIR = "configs"
 class ConfigGenerator(ParserUtils):
     def __init__(self, config_filename="config.txt", cache_filename="cache.json"):
         super().__init__()
-        self.title_parentheses_reg = re.compile(r" (\(.*\))$")
-        self.title_special_chars_reg = re.compile(r"[^\w\s\-_]")
         self.general_episode_reg = re.compile(r"https://.*-(episode|ep)-(\d+)")
         self.config_filepath = os.path.join(CONFIG_DIR, config_filename)
         self.cache_filepath = os.path.join(CONFIG_DIR, cache_filename)
@@ -152,11 +150,6 @@ class ConfigGenerator(ParserUtils):
         fields_to_update = {"myanimelist_url": item["url"], "episodes": item["episodes"], "mal_id": item["mal_id"]}
         self.update_cache(fields_to_update, title)
 
-    def filter_title(self, title):
-        title = re.sub(self.title_parentheses_reg, "", title).rstrip()
-        title = re.sub(r"(\d+)(st|nd|rd|th) season", r"season \1", title, flags=re.IGNORECASE)
-        return re.sub(self.title_special_chars_reg, "", title).lower()
-
     def update_cache(self, fields_to_update, title):
         cache = self.get_cache()
         for k, v in cache.items():
@@ -204,6 +197,7 @@ class ConfigGenerator(ParserUtils):
 
     def stringify(self, value):
         value = str(value) if value else "-"
+        value = value.replace("_", " ")
         return value if value.startswith("http") else value.capitalize()
 
     def save_cache(self):
