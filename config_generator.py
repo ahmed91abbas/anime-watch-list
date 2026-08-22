@@ -185,6 +185,7 @@ class ConfigGenerator(ParserUtils):
             "episodes": self.stringify(response["num_episodes"]),
             "aired": self.stringify(response["start_date"]),
             "score": self.stringify(response["mean"]),
+            "rank": self.stringify(response["rank"]),
             "season": self.stringify(season),
             "broadcast": self.stringify(broadcast),
             "genres": ", ".join(genres),

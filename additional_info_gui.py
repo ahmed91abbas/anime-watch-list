@@ -20,6 +20,7 @@ class AdditionalInfoGUI(GuiUtils):
             "Episodes",
             "Aired",
             "Score",
+            "Rank",
             "Season",
             "Genres",
             "Broadcast",
