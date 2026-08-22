@@ -15,6 +15,9 @@ from anitaku_parser import AnitakuParser
 from generic_parser import GenericParser
 from hianime_parser import HiAnimeParser
 from parser_utils import ParserUtils
+from dotenv import load_dotenv
+
+load_dotenv()
 
 MAX_THREADS = 8
 CONFIG_DIR = "configs"
@@ -91,7 +94,15 @@ class ConfigGenerator(ParserUtils):
         return [self.base_info] * len(self.get_urls())
 
     def convert_time_timezone(self, day, time, tz1, tz2):
-        days = ["Mondays", "Tuesdays", "Wednesdays", "Thursdays", "Fridays", "Saturdays", "Sundays"]
+        days = [
+            "monday",
+            "tuesday",
+            "wednesday",
+            "thursday",
+            "friday",
+            "saturday",
+            "sunday",
+        ]
         time = datetime.strptime(time, "%H:%M").time()
         dt = datetime.combine(datetime.now(), time)
         tz1 = timezone(tz1)
@@ -107,46 +118,29 @@ class ConfigGenerator(ParserUtils):
 
     def get_additional_info(self, title, mal_id=None):
         filtered_title = self.filter_title(title)
-        url = "https://api.jikan.moe/v4/anime"
+        url = "https://api.myanimelist.net/v2/anime"
+        headers = {"X-MAL-CLIENT-ID": os.getenv("MYANIMELIST_CLIENT_ID")}
+        params = {
+            "fields": "id,title,main_picture,alternative_titles,start_date,end_date,synopsis,mean,rank,popularity,media_type,status,genres,num_episodes,start_season,broadcast,source,studios"
+        }
         if mal_id:
-            url = f"https://api.jikan.moe/v4/anime/{mal_id}"
-            response = requests.request("GET", url)
-            response = response.json()["data"]
+            url = f"{url}/{mal_id}"
+            response = requests.request("GET", url, headers=headers, params=params)
+            response = response.json()
             info = self.map_myanimelist_response(response)
             self.cache_myanimelist_mapped_item(title, info)
             return info
-
-        params = {"q": filtered_title, "limit": "5"}
-        response = requests.request("GET", url, params=params)
+        params = {**params, **{"q": filtered_title, "limit": "1"}}
+        response = requests.request("GET", url, params=params, headers=headers)
         response = response.json()
-        if not "data" in response:
-            return {}
-        backup_item = None
-        for item in response["data"]:
-            for title_object in item["titles"]:
-                filtered_res_title = self.filter_title(title_object["title"])
-                if filtered_title == filtered_res_title:
-                    info = self.map_myanimelist_response(item)
-                    self.cache_myanimelist_mapped_item(title, info)
-                    return info
-                elif filtered_res_title in filtered_title or filtered_title in filtered_res_title:
-                    backup_item = item
-        if backup_item:
-            info = self.map_myanimelist_response(backup_item)
+        if len(response.get("data", [])) > 0:
+            info = self.map_myanimelist_response(response["data"][0]["node"])
             self.cache_myanimelist_mapped_item(title, info)
             return info
         return {}
 
     def cache_myanimelist_mapped_item(self, title, item):
         fields_to_update = {"myanimelist_url": item["url"], "episodes": item["episodes"], "mal_id": item["mal_id"]}
-        if item["image_url"]:
-            base64_image_data = self.get_image_base64_data(item["image_url"])
-            image = {
-                "url": item["image_url"],
-                "base64_data": base64_image_data,
-            }
-            item["base64_image_data"] = base64_image_data
-            fields_to_update["image"] = image
         self.update_cache(fields_to_update, title)
 
     def filter_title(self, title):
@@ -165,35 +159,37 @@ class ConfigGenerator(ParserUtils):
 
     def map_myanimelist_response(self, response):
         current_zone = "Europe/Stockholm"
-        if response["broadcast"]["day"]:
+        if response["broadcast"]["day_of_the_week"]:
             day, time = self.convert_time_timezone(
-                response["broadcast"]["day"],
-                response["broadcast"]["time"],
-                response["broadcast"]["timezone"],
+                response["broadcast"]["day_of_the_week"],
+                response["broadcast"]["start_time"],
+                "Asia/Tokyo",
                 current_zone,
             )
             broadcast = f"{day} at {time} ({current_zone})"
         else:
             broadcast = "-"
         genres = [self.stringify(genre["name"]) for genre in response["genres"]]
-        img_url = response["images"].get("webp", {}).get("large_image_url", "") or response["images"].get(
-            "jpg", {}
-        ).get("large_image_url", "")
+        season = (
+            f"{response['start_season']['season'].capitalize()} {response['start_season']['year']}"
+            if response["start_season"]
+            else "-"
+        )
         return {
-            "url": self.stringify(response["url"]),
+            "url": f"https://myanimelist.net/anime/{response['id']}",
             "title": self.stringify(response["title"]),
-            "title_english": self.stringify(response["title_english"]),
-            "mal_id": self.stringify(response["mal_id"]),
+            "title_english": self.stringify(response["alternative_titles"]["en"]),
+            "mal_id": self.stringify(response["id"]),
             "source": self.stringify(response["source"]),
             "status": self.stringify(response["status"]),
-            "episodes": self.stringify(response["episodes"]),
-            "aired": self.stringify(response["aired"]["string"]),
-            "score": self.stringify(response["score"]),
-            "season": self.stringify(response["season"]),
+            "episodes": self.stringify(response["num_episodes"]),
+            "aired": self.stringify(response["start_date"]),
+            "score": self.stringify(response["mean"]),
+            "season": self.stringify(season),
             "broadcast": self.stringify(broadcast),
             "genres": ", ".join(genres),
             "synopsis": self.stringify(response["synopsis"]),
-            "image_url": img_url,
+            "image_url": response["main_picture"]["large"],
         }
 
     def stringify(self, value):
@@ -279,3 +275,4 @@ class ConfigGenerator(ParserUtils):
 
 if __name__ == "__main__":
     gen = ConfigGenerator()
+    gen.get_additional_info("Attack on Titan", mal_id="16498")

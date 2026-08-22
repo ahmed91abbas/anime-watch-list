@@ -18,6 +18,10 @@ Currently supported servers:
 You can also view more information about any anime by clicking the picture to the left. The information is fetched from [myanimelist.net](https://myanimelist.net/)
 
 ![additional-information](images/additional-information.png)
+In order to be able to fetch the additional info, you need to generate your own Client ID from https://myanimelist.net/apiconfig and then add that value to a .env file next to the app executor with the following value:
+```
+MYANIMELIST_CLIENT_ID=YOUR_CLIENT_ID
+```
 
 ### To run locally, follow these steps:
 
