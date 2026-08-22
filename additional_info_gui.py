@@ -118,8 +118,9 @@ class AdditionalInfoGUI(GuiUtils):
                 url = value
                 text_widget.bind("<ButtonRelease-1>", lambda e: webbrowser.open(url, new=0, autoraise=True))
                 text_widget.config(fg="blue", cursor="hand2")
-        if info.get("base64_image_data"):
-            image = self.get_image_data(info["base64_image_data"], 320, 500)
+        if info.get("image_url"):
+            base64_image_data = self.generator.get_image_base64_data(info["image_url"])
+            image = self.get_image_data(base64_image_data, 320, 500)
             self.img_label.config(image=image)
             self.img_label.image = image
         self.synopsis_text_widget.insert(tk.INSERT, info.get("synopsis", "-"))

@@ -130,11 +130,20 @@ class ConfigGenerator(ParserUtils):
             info = self.map_myanimelist_response(response)
             self.cache_myanimelist_mapped_item(title, info)
             return info
-        params = {**params, **{"q": filtered_title, "limit": "1"}}
+        params = {**params, **{"q": filtered_title, "limit": "5"}}
         response = requests.request("GET", url, params=params, headers=headers)
         response = response.json()
         if len(response.get("data", [])) > 0:
-            info = self.map_myanimelist_response(response["data"][0]["node"])
+            backup_item = response["data"][0]["node"]
+            for item in response["data"]:
+                info = self.map_myanimelist_response(item["node"])
+                if (
+                    self.filter_title(info["title"]) == filtered_title
+                    or self.filter_title(info["title_english"]) == filtered_title
+                ):
+                    self.cache_myanimelist_mapped_item(title, info)
+                    return info
+            info = self.map_myanimelist_response(backup_item)
             self.cache_myanimelist_mapped_item(title, info)
             return info
         return {}
@@ -276,4 +285,5 @@ class ConfigGenerator(ParserUtils):
 
 if __name__ == "__main__":
     gen = ConfigGenerator()
-    gen.get_additional_info("Attack on Titan", mal_id="16498")
+    info = gen.get_additional_info("Black Clover")
+    print(info)
