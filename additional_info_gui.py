@@ -13,6 +13,8 @@ class AdditionalInfoGUI(GuiUtils):
         self.title = title
         self.mal_id = mal_id
         self.base64_image_data = base64_image_data
+        self.base64_image_data2 = None
+        self.current_image_index = 1
         self.info_titles = [
             "Url",
             "Source",
@@ -54,10 +56,9 @@ class AdditionalInfoGUI(GuiUtils):
 
         padx = 15
         pady = 15
-        image = self.get_image_data(self.base64_image_data, 320, 500)
-        self.img_label = tk.Label(body_frame, bg=bg_color, image=image)
-        self.img_label.image = image
-        self.img_label.pack(side=tk.LEFT, padx=padx, pady=pady)
+        self.img_button = tk.Button(body_frame, bg=bg_color, command=self.on_switch_image)
+        self.set_img_button_image(self.base64_image_data)
+        self.img_button.pack(side=tk.LEFT, padx=padx, pady=pady)
 
         info_frame = tk.Frame(body_frame, bg=bg_color)
         info_frame.pack(side=tk.RIGHT, padx=(0, padx), pady=pady, fill=tk.BOTH)
@@ -119,10 +120,7 @@ class AdditionalInfoGUI(GuiUtils):
                 text_widget.bind("<ButtonRelease-1>", lambda e: webbrowser.open(url, new=0, autoraise=True))
                 text_widget.config(fg="blue", cursor="hand2")
         if info.get("image_url"):
-            base64_image_data = self.generator.get_image_base64_data(info["image_url"])
-            image = self.get_image_data(base64_image_data, 320, 500)
-            self.img_label.config(image=image)
-            self.img_label.image = image
+            self.base64_image_data2 = self.generator.get_image_base64_data(info["image_url"])
         self.synopsis_text_widget.insert(tk.INSERT, info.get("synopsis", "-"))
         self.synopsis_text_widget.config(state=tk.DISABLED)
         self.top.title("Additional information")
@@ -141,3 +139,16 @@ class AdditionalInfoGUI(GuiUtils):
         text_widget.tag_configure("center", justify="center")
         text_widget.tag_add("center", "1.0", "end")
         text_widget.config(state=tk.DISABLED)
+
+    def on_switch_image(self):
+        if self.current_image_index == 1 and self.base64_image_data2:
+            self.set_img_button_image(self.base64_image_data2)
+            self.current_image_index = 2
+        else:
+            self.set_img_button_image(self.base64_image_data)
+            self.current_image_index = 1
+
+    def set_img_button_image(self, base64_image_data):
+        image = self.get_image_data(base64_image_data, 320, 500)
+        self.img_button.config(image=image)
+        self.img_button.image = image
