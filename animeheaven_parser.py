@@ -43,7 +43,21 @@ class AnimeheavenParser(ParserUtils):
         return id_match.group(1) if id_match else None
 
     def build_watch_url(self, anime_id, ep_id, ep):
-        return f"https://f1.animeheaven.me/video.mp4?{ep_id}&anime.php?{anime_id}&episode={ep}"
+        session = requests.Session()
+        session.cookies.set("key", ep_id, domain="animeheaven.me", path="/")
+        response = session.get(
+            f"{BASE_URL}gate.php",
+            headers={
+                "Referer": f"{BASE_URL}anime.php?{anime_id}",
+                "User-Agent": "Mozilla/5.0",
+            },
+        )
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        sources = [source.get("src") for source in soup.select("video source[src]")]
+        if not sources:
+            raise Exception(f"No video sources found for anime_id: {anime_id}, ep_id: {ep_id}")
+        return f"{sources[0]}&anime.php?{anime_id}&episode={ep}"
 
     def get_main_url(self, url):
         ep = self.get_ep_from_url(url)
