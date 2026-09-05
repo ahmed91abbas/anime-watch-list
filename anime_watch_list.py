@@ -12,6 +12,8 @@ from config_generator import ConfigGenerator
 from gui_utils import GuiUtils
 from settings_gui import SettingsGUI
 
+TITLE = "Anime Watch List"
+
 
 class AnimeWatchListGUI(GuiUtils):
     def __init__(self):
@@ -28,8 +30,12 @@ class AnimeWatchListGUI(GuiUtils):
         self.on_reload()
         self.mainloop()
 
+    def progress(self, done, total):
+        self.root.title(f"{TITLE} - Progress: {done}/{total} ({done / total * 100:.1f}%)")
+
     def add_config_to_gui(self, elements):
-        self.config = self.generator.get_config()
+        self.config = self.generator.get_config(progress_callback=self.progress)
+        self.root.title(TITLE)
         self.config = self.sort_config(self.config)
         self.update_gui(self.config, elements)
         self.generator.update_config(self.config)
@@ -47,7 +53,7 @@ class AnimeWatchListGUI(GuiUtils):
         self.root = tk.Tk()
         self.root.configure(background=self.secondary_bg_color)
         self.components_methods["secondary_background_color"].append((self.root.configure, "background"))
-        self.root.title("Anime Watch List")
+        self.root.title(TITLE)
         self.root.wm_protocol("WM_DELETE_WINDOW", self.on_close)
         self.root.resizable(False, False)
         self.root.geometry(self.get_geometry())

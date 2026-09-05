@@ -232,13 +232,20 @@ class ConfigGenerator(ParserUtils):
     def get_cache_key(self, url):
         return self.parsers[self.get_domain_name(url)]().get_cache_key(url)
 
-    def get_config(self):
+    def get_config(self, progress_callback=None):
         start_time = time.time()
         self.cache = self.get_cache()
         self.config = []
+        urls = self.get_urls()
+        total = len(urls)
+        completed = 0
         with concurrent.futures.ThreadPoolExecutor(MAX_THREADS) as executor:
-            futures = [executor.submit(self.get_details, url) for url in self.get_urls()]
-            concurrent.futures.wait(futures)
+            futures = [executor.submit(self.get_details, url) for url in urls]
+            for future in concurrent.futures.as_completed(futures):
+                future.result()
+                completed += 1
+                if progress_callback:
+                    progress_callback(completed, total)
         self.save_cache()
         self.update_config(self.config)
         self.config_load_time = time.time() - start_time
