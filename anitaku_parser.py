@@ -53,7 +53,7 @@ class AnitakuParser(ParserUtils):
         return {**self.base_info, **details}
 
     def update_with_episode_page_info(self, url, details):
-        response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
+        response = self.requests_get(url)
         url = response.url
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.find("div", {"class": "anime-info"}).a.text
@@ -70,7 +70,7 @@ class AnitakuParser(ParserUtils):
         details["image"]["url"] = cover_url
 
     def update_with_category_page_info(self, url, details):
-        response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
+        response = self.requests_get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         title = soup.find("div", {"class": "anime_info_body_bg"}).h1.text
         cover_url = soup.find(itemprop="image").get("content")

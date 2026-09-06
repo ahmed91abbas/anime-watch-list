@@ -68,7 +68,7 @@ class AnimeheavenParser(ParserUtils):
         elif "episode.php" not in url:
             raise Exception(f"Invalid animeheaven url: {url}")
         try:
-            response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
+            response = self.requests_get(url)
             soup = BeautifulSoup(response.text, "html.parser")
             h1 = soup.find("h1")
             relative_url = h1.find("a").attrs["href"]
@@ -83,7 +83,7 @@ class AnimeheavenParser(ParserUtils):
         details["ep"] = ep
         details["current_ep_url"] = f"{url}&episode={ep}"
         details["current_url"] = details["current_ep_url"]
-        response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
+        response = self.requests_get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         anime_id = self.get_id_from_main_url(url)
         ep_links = soup.find_all("a", class_="c")

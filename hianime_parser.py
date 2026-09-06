@@ -49,7 +49,7 @@ class HiAnimeParser(ParserUtils):
     def extend_details_with_ep_data(self, url, details):
         anime_id, ep_id, ep_number = self.parse_url(url)
         ep_list_url = f"https://hianime.nz/ajax/v2/episode/list/{anime_id}"
-        response = requests.get(ep_list_url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
+        response = self.requests_get(ep_list_url)
         data = response.json()
         soup = BeautifulSoup(data["html"], "html.parser")
         ep_items = soup.find_all("a", {"class": "ep-item"})
@@ -73,7 +73,7 @@ class HiAnimeParser(ParserUtils):
         return details
 
     def extend_details_from_page(self, url, details):
-        response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
+        response = self.requests_get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         script = soup.find("script", {"id": "syncData"})
         if script:

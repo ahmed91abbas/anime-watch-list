@@ -39,7 +39,7 @@ class AninekoParser(ParserUtils):
 
     def extend_details_from_page(self, url, details):
         current_ep_nbr = int(details.get("ep"))
-        response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"})
+        response = self.requests_get(url)
         soup = BeautifulSoup(response.text, "html.parser")
         title_item = soup.find("div", {"class": "nv-info-main"})
         details["title"] = title_item.find("h1").text.strip() if title_item else ""

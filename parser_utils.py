@@ -5,6 +5,8 @@ import logging
 from urllib.parse import quote, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
+import requests
+
 
 class ParserUtils:
     def __init__(self):
@@ -32,6 +34,15 @@ class ParserUtils:
             "episodes": None,
             "image": {"url": "", "base64_data": self.get_image_base64_data(None)},
         }
+
+    def requests_get(self, url, timeout=10):
+        try:
+            response = requests.get(url, allow_redirects=True, headers={"User-Agent": "Mozilla/5.0"}, timeout=timeout)
+            response.raise_for_status()
+            return response
+        except requests.exceptions.RequestException as e:
+            logging.exception("Failed to fetch URL: %s", url)
+            raise e
 
     def get_image_base64_data(self, url):
         if url:
