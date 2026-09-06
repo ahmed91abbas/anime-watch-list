@@ -1,4 +1,5 @@
 import re
+import logging
 from urllib.parse import urljoin
 
 import requests
@@ -28,7 +29,8 @@ class AnimeheavenParser(ParserUtils):
                 if ep == "0" and not details.get("next_ep_url"):
                     details["status"] = self.STATUSES["not_aired"]
                 details["loaded_from_cache"] = False
-            except:
+            except Exception:
+                logging.exception("Failed to fetch details from AnimeHeaven: %s", url)
                 details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
         if details.get("next_ep_url") != next_ep_url_from_cache:
             details["weight"] = 1

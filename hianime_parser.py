@@ -1,5 +1,6 @@
 import html
 import json
+import logging
 import re
 
 import requests
@@ -24,7 +25,8 @@ class HiAnimeParser(ParserUtils):
             try:
                 details = self.extend_details_from_page(url, details)
                 details["loaded_from_cache"] = False
-            except:
+            except Exception:
+                logging.exception("Failed to fetch page details from HiAnime: %s", url)
                 details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
         if not details.get("current_ep_url") or (
             not details.get("next_ep_url") and details.get("status") != self.STATUSES["finished"]
@@ -32,7 +34,8 @@ class HiAnimeParser(ParserUtils):
             try:
                 details = self.extend_details_with_ep_data(url, details)
                 details["loaded_from_cache"] = False
-            except:
+            except Exception:
+                logging.exception("Failed to fetch episode details from HiAnime: %s", url)
                 details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
         if details.get("next_ep_url") != next_ep_url_from_cache:
             details["weight"] = 1
@@ -86,8 +89,8 @@ class HiAnimeParser(ParserUtils):
                 details["image"] = {}
                 details["image"]["url"] = img_url
                 details["image"]["base64_data"] = self.get_image_base64_data(details["image"]["url"])
-            except:
-                pass
+            except Exception:
+                logging.exception("Failed to load image for HiAnime page: %s", url)
         return details
 
     def get_cache_key(self, url):

@@ -71,6 +71,7 @@ class AnimeWatchListGUI(GuiUtils):
         options_menu.add_command(label="Remove cache", command=self.on_remove_cache)
         options_menu.add_command(label="Show stats", command=self.on_stats)
         options_menu.add_command(label="Edit the config file", command=self.on_edit_config)
+        options_menu.add_command(label="Open the error logs", command=self.on_open_error_logs)
         options_menu.add_command(
             label="Open in Github",
             command=partial(self.on_open_page, 0, "https://github.com/ahmed91abbas/anime-watch-list"),
@@ -372,14 +373,24 @@ class AnimeWatchListGUI(GuiUtils):
         if close:
             self.on_close()
 
-    def on_edit_config(self):
-        file_path = self.generator.get_config_filepath()
+    def open_file_with_default_app(self, file_path):
+        if not os.path.exists(file_path):
+            messagebox.showerror("Error", f"File not found: {file_path}")
+            return
         if sys.platform.startswith("win"):
             os.startfile(file_path)
         elif sys.platform.startswith("darwin"):
             subprocess.call(["open", file_path])
         else:
             subprocess.call(["xdg-open", file_path])
+
+    def on_edit_config(self):
+        file_path = self.generator.get_config_filepath()
+        self.open_file_with_default_app(file_path)
+
+    def on_open_error_logs(self):
+        error_log_path = self.generator.get_error_log_filepath()
+        self.open_file_with_default_app(error_log_path)
 
     def on_edit(self):
         if not self.elements:

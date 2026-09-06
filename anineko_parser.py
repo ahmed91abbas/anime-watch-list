@@ -50,8 +50,8 @@ class AninekoParser(ParserUtils):
                 details["image"] = {}
                 details["image"]["url"] = img_url
                 details["image"]["base64_data"] = self.get_image_base64_data(details["image"]["url"])
-            except:
-                pass
+            except Exception:
+                logging.exception("Failed to load image for Anineko page: %s", url)
         ep_grid = soup.find_all("div", {"class": "nv-info-episode-grid"})
         if ep_grid:
             ep_items = ep_grid[0].find_all("article", {"class": "nv-info-episode-item"})

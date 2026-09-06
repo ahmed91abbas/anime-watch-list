@@ -1,5 +1,6 @@
 import os
 import re
+import logging
 
 import requests
 from bs4 import BeautifulSoup
@@ -38,7 +39,8 @@ class AnitakuParser(ParserUtils):
             try:
                 update_method(url, details)
                 details["loaded_from_cache"] = False
-            except:
+            except Exception:
+                logging.exception("Failed to fetch details from Anitaku: %s", url)
                 details = self.get_unsupported_url_info(url, self.STATUSES["failed"])
 
         if not details["image"]["base64_data"]:

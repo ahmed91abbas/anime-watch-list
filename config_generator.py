@@ -1,5 +1,6 @@
 import concurrent.futures
 import json
+import logging
 import os
 import re
 import time
@@ -21,6 +22,27 @@ load_dotenv()
 
 MAX_THREADS = 8
 CONFIG_DIR = "configs"
+LOG_FILEPATH = os.path.join(CONFIG_DIR, "errors.log")
+
+
+def configure_logging():
+    root_logger = logging.getLogger()
+    if getattr(root_logger, "anime_watch_list_logging", False):
+        return
+
+    os.makedirs(os.path.dirname(LOG_FILEPATH), exist_ok=True)
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+    console_handler = logging.StreamHandler()
+    file_handler = logging.FileHandler(LOG_FILEPATH, mode="w")
+    console_handler.setFormatter(formatter)
+    file_handler.setFormatter(formatter)
+    root_logger.setLevel(logging.ERROR)
+    root_logger.addHandler(console_handler)
+    root_logger.addHandler(file_handler)
+    root_logger.anime_watch_list_logging = True
+
+
+configure_logging()
 
 
 class ConfigGenerator(ParserUtils):
@@ -29,6 +51,7 @@ class ConfigGenerator(ParserUtils):
         self.general_episode_reg = re.compile(r"https://.*-(episode|ep)-(\d+)")
         self.config_filepath = os.path.join(CONFIG_DIR, config_filename)
         self.cache_filepath = os.path.join(CONFIG_DIR, cache_filename)
+        self.error_log_filepath = LOG_FILEPATH
         self.config = []
         self.parsers = {
             "anineko": AninekoParser,
@@ -42,7 +65,8 @@ class ConfigGenerator(ParserUtils):
         try:
             with open(path, "r") as f:
                 return json.load(f)
-        except:
+        except Exception:
+            logging.exception("Failed to read JSON file: %s", path)
             return dict()
 
     def write_json(self, path, data):
@@ -51,6 +75,9 @@ class ConfigGenerator(ParserUtils):
 
     def get_config_filepath(self):
         return self.config_filepath
+
+    def get_error_log_filepath(self):
+        return self.error_log_filepath
 
     def add_line_to_config(self, line):
         with open(self.config_filepath, "a") as f:

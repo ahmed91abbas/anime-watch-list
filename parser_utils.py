@@ -1,6 +1,7 @@
 import base64
 import os
 import re
+import logging
 from urllib.parse import quote, urlsplit, urlunsplit
 from urllib.request import Request, urlopen
 
@@ -39,8 +40,8 @@ class ParserUtils:
                 req = Request(encoded_url, headers={"User-Agent": "Mozilla/5.0"})
                 with urlopen(req, timeout=3) as response:
                     return base64.b64encode(response.read()).decode("utf-8")
-            except:
-                pass
+            except Exception:
+                logging.exception("Failed to load image from %s", url)
         return self.get_default_image_base64_data()
 
     def get_default_image_base64_data(self):
