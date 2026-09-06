@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-MAX_THREADS = 8
+MAX_THREADS = 3
 CONFIG_DIR = "configs"
 LOG_FILEPATH = os.path.join(CONFIG_DIR, "errors.log")
 
@@ -250,6 +250,8 @@ class ConfigGenerator(ParserUtils):
         self.write_json(self.cache_filepath, result)
 
     def get_cache(self):
+        if not os.path.exists(self.cache_filepath):
+            return {}
         return self.read_json(self.cache_filepath)
 
     def remove_cache(self):
